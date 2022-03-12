@@ -1,0 +1,58 @@
+<shortcuts>
+	<shortcut>
+		<defaultID>13009</defaultID>
+		<label>13009</label>
+		<label2>Commande Kodi</label2>
+		<icon>special://skin/extras/icons/power.png</icon>
+		<thumb>special://skin/extras/icons/power.png</thumb>
+		<action>Quit</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Profils</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/artist.png</thumb>
+		<action>System.LogOff</action>
+		</shortcut>
+	<shortcut>
+		<defaultID>settings</defaultID>
+		<label>10004</label>
+		<label2>Elément de menu commun</label2>
+		<icon>special://skin/extras/icons/settings.png</icon>
+		<thumb>special://skin/extras/icons/addons.png</thumb>
+		<action>ActivateWindow(Settings)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID>7</defaultID>
+		<label>7</label>
+		<label2>Elément de menu commun</label2>
+		<icon>special://skin/extras/icons/folder.png</icon>
+		<thumb>special://skin/extras/icons/folder.png</thumb>
+		<action>ActivateWindow(FileManager)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID>24001</defaultID>
+		<label>24001</label>
+		<label2>Paramètres</label2>
+		<icon>special://skin/extras/icons/addons.png</icon>
+		<thumb>special://skin/extras/icons/enabled.png</thumb>
+		<action>ActivateWindow(AddonBrowser)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID>1037</defaultID>
+		<label>1037</label>
+		<label2>Vidéos</label2>
+		<icon>special://skin/extras/icons/video-addons.png</icon>
+		<thumb>special://skin/extras/icons/videoplay.png</thumb>
+		<action>ActivateWindow(Videos,Addons,return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Page Skin (install addon) </label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/download.png</thumb>
+		<action>RunScript(special://home/userdata/addon_data/Scripts/menu_skin.py)</action>
+		</shortcut>
+	</shortcuts>

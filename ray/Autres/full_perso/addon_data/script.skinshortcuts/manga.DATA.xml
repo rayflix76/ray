@@ -1,0 +1,50 @@
+<shortcuts>
+	<shortcut>
+		<defaultID />
+		<label>Recherche</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/search.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMenu&amp;title=9+Mangas+&amp;pasteID=26",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Les Dossiers</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/viewmode.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showGroupes&amp;title=Animes+&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Danime%26pasteID%3D26&amp;sFav=showGroupes",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Derniers ajouts</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/addtile.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=Animes+&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Danime%26bNews%3DTrue%26pasteID%3D26&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Mangas OAV</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/skull.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showGroupeDetails&amp;title=Mangas+OAV&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26pasteID%3D26%26sGroupe%3DMangas+OAV&amp;sFav=showGroupeDetails",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Mangas Films</label>
+		<label2>Extensions Vidéo</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/_ this is that productions.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=Mangas+Films&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26pasteID%3D26%26sGroupe%3DMangas+Films&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Anime Netflix</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/netflix.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=Netflix&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Danime%26pasteID%3D26%26sNetwork%3D213%3ANetflix&amp;sTmdbId=213&amp;sMeta=8&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	</shortcuts>

@@ -1,0 +1,50 @@
+<shortcuts>
+	<shortcut>
+		<defaultID />
+		<label>Anime Pour les grands</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/boy.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=S%C3%A9ries+&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dserie%26bNews%3DTrue%26pasteID%3D17&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Anime Annee 80</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/grooveshark.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMenu&amp;title=6+Dessin+Anime+80&amp;pasteID=19",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Films Animes</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/favourites.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=Films+&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26bNews%3DTrue%26pasteID%3D9&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Séries Animes</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/favourites2.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=S%C3%A9ries+&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dserie%26bNews%3DTrue%26pasteID%3D14&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Mangas Films</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/sun.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=Mangas+Films&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26pasteID%3D26%26sGroupe%3DMangas+Films&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Mangas Anime</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/genre.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=Mangas+A+partir+de+10+ans&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Danime%26pasteID%3D26%26sGroupe%3DMangas+A+partir+de+10+ans&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	</shortcuts>

@@ -1,0 +1,50 @@
+<shortcuts>
+	<shortcut>
+		<defaultID />
+		<label>Dessin Anime Super Heros</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/warning.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=Films+&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26bNews%3DTrue%26pasteID%3D11&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Anime Super Heros</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/favourites.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=S%C3%A9ries+&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dserie%26bNews%3DTrue%26pasteID%3D11&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Pokemon Films</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/cricket.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=Pokemon&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26pasteID%3D26%26sGroupe%3DMangas%2BOAV%26sGroupe%3DMangas+OAV%3APokemon&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Dragon Ball Films</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/userrating.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=Dragon+Ball&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26pasteID%3D26%26sGroupe%3DMangas%2BOAV%26sGroupe%3DMangas+OAV%3ADragon+Ball&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Naruto</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/boxing.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=Naruto&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26pasteID%3D26%26sGroupe%3DMangas%2BOAV%26sGroupe%3DMangas+OAV%3ANaruto&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>One Piece</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/diamond.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=One+Piece&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26pasteID%3D26%26sGroupe%3DMangas%2BOAV%26sGroupe%3DMangas+OAV%3AOne+Piece&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	</shortcuts>

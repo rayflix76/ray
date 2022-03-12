@@ -1,0 +1,74 @@
+<shortcuts>
+	<shortcut>
+		<defaultID />
+		<label>Recherche Films</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/search.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMenu&amp;title=5+DAnime+Films+&amp;pasteID=9",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Les Dossiers Films</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/viewmode.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showGroupes&amp;title=Films+&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26pasteID%3D9&amp;sFav=showGroupes",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Disney</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/_ walt disney studio archives.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMenu&amp;title=5+Films+Disney+Anime&amp;pasteID=10",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Super Heros</label>
+		<label2>Extensions Vidéo</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/_ marvel enterprises.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMenu&amp;title=5+SuperHeros+Anime&amp;pasteID=11",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Recherche Series</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/search.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMenu&amp;title=6+DAnime+Series+&amp;pasteID=14",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Les Dossiers Series</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/viewmode.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showGroupes&amp;title=S%C3%A9ries+&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dserie%26pasteID%3D14&amp;sFav=showGroupes",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Serie Netflix</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/netflix.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=Netflix&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dserie%26pasteID%3D14%26sNetwork%3D213%3ANetflix&amp;sTmdbId=213&amp;sMeta=8&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Films Series Enfants</label>
+		<label2>Extensions Vidéo</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/_ 20th century fox.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMenu&amp;title=5+Films+Series+Enfants&amp;pasteID=13",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Annees 80</label>
+		<label2>Extensions Vidéo</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/reddit.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMenu&amp;title=6+Dessin+Anime+80&amp;pasteID=19",return)</action>
+		</shortcut>
+	</shortcuts>

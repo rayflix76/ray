@@ -1,0 +1,50 @@
+<shortcuts>
+	<shortcut>
+		<defaultID />
+		<label>Telecharger</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/download.png</thumb>
+		<action>RunScript(special://home/userdata/addon_data/Scripts/addon_maj.py)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Addon Skin</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/filebox.png</thumb>
+		<action>ActivateWindow(Programs,"plugin://plugin.program.skinrayflix",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID>plugin.program.preniumuptobox</defaultID>
+		<label>Prenium Uptobox</label>
+		<label2>Programme</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/wand.png</thumb>
+		<action>ActivateWindow(Programs,"plugin://plugin.program.preniumuptobox",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>sauvegarde restauration</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/wizard.png</thumb>
+		<action>ActivateWindow(Programs,"plugin://plugin.program.saverayflix",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>[COLOR lightcoral]Forcer la mise à jour des contenus[/COLOR]</label>
+		<label2>Extensions Vidéo</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/download.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=refreshAllPaste&amp;title=Forcer+la+mise+%C3%A0+jour+des+contenus&amp;sFav=refreshAllPaste",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Actualiser Skin</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/update.png</thumb>
+		<action>RELOADSKIN()</action>
+		</shortcut>
+	</shortcuts>

@@ -1,0 +1,74 @@
+<shortcuts>
+	<shortcut>
+		<defaultID>plugin.video.catchuptvandmore</defaultID>
+		<label>TV + Replay TNT (CatchupTV)</label>
+		<label2>Extensions Vidéo</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/recent.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.catchuptvandmore",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>MYTF1</label>
+		<label2>Extensions Vidéo</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/_ tf1.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.catchuptvandmore/resources/lib/channels/fr/mytf1/mytf1_root/?_pickle_=80049535000000000000007d94288c075f7469746c655f948c054d59544631948c08786d6c74765f6964944e8c076974656d5f6964948c056d7974663194752e",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>france.tv</label>
+		<label2>Extensions Vidéo</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/_ france.tv.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.catchuptvandmore/resources/lib/channels/fr/francetv/francetv_root/?_pickle_=8004953c000000000000007d94288c075f7469746c655f948c096672616e63652e7476948c08786d6c74765f6964944e8c076974656d5f6964948c086672616e6365747694752e",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>6play</label>
+		<label2>Extensions Vidéo</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/_ m6.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.catchuptvandmore/resources/lib/channels/fr/6play/sixplay_root/?_pickle_=8004952f000000000000007d94288c075f7469746c655f948c0536706c6179948c08786d6c74765f6964944e8c076974656d5f6964946802752e",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>NRJ Play</label>
+		<label2>Extensions Vidéo</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/_ nrj12.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.catchuptvandmore/resources/lib/channels/fr/nrj/nrjplay_root/?_pickle_=8004953a000000000000007d94288c075f7469746c655f948c084e524a20506c6179948c08786d6c74765f6964944e8c076974656d5f6964948c076e726a706c617994752e",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>PlutoTV (+ 80 chaines thematiques)</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/_ pluto.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pluto_tv&amp;function=load&amp;title=Pluto+TV&amp;siteUrl=http%3A%2F%2Fvenom&amp;sFav=load",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>TV + sport (Vstream Sources)</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/tv.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=freebox&amp;function=load&amp;title=T%C3%A9l%C3%A9vision%2FMusique&amp;siteUrl=http%3A%2F%2Fvenom&amp;sFav=load",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Sport Replay</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/soccer.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMenu&amp;title=8+Sports&amp;pasteID=25",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID>livetv</defaultID>
+		<label>32022</label>
+		<label2>Elément personnalisé</label2>
+		<icon>special://skin/extras/icons/livetv.png</icon>
+		<thumb>special://skin/extras/icons/tv.png</thumb>
+		<action>ActivateWindow(TVCHANNELS)</action>
+		</shortcut>
+	</shortcuts>

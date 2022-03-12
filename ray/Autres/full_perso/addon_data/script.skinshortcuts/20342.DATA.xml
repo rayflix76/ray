@@ -1,0 +1,58 @@
+<shortcuts>
+	<shortcut>
+		<defaultID>recherchefilms-colorlightcoral-genreacteursaga-color</defaultID>
+		<label>Apres 2000</label>
+		<label2>Elément personnalisé</label2>
+		<icon>special://skin/extras/icons/folder.png</icon>
+		<thumb>special://skin/extras/icons/search.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMenu&amp;title=1+Films+Apres+2000+&amp;pasteID=1",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Avant 2000</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/search.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMenu&amp;title=1+Films+Avant+2000&amp;pasteID=2",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Films Nouveaute</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/_ 20th century fox.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showMovies&amp;title=Films+&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26bNews%3DTrue%26pasteID%3D28&amp;sFav=showMovies",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Super Heros</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/_ marvel enterprises.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showGroupeDetails&amp;title=Super+Heros&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26pasteID%3D3%26sGroupe%3DSuper+Heros&amp;sFav=showGroupeDetails",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Les Dossiers</label>
+		<label2>Elément personnalisé</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/playlist.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showGroupes&amp;title=Films+&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26pasteID%3D1&amp;sFav=showGroupes",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID>films3d-colorlightcoral-rayflix-color</defaultID>
+		<label>Films 3D</label>
+		<label2>Elément personnalisé</label2>
+		<icon>special://skin/extras/icons/folder.png</icon>
+		<thumb>special://skin/extras/icons/3dtv.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.vstream/?site=pastebin&amp;function=showGroupes&amp;title=Films+&amp;siteUrl=https%3A%2F%2Fpastebin.com%2Fraw%2F%26numPage%3D1%26sMedia%3Dfilm%26pasteID%3D4&amp;sFav=showGroupes",return)</action>
+		</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Films Local</label>
+		<label2>Vidéos</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://skin/extras/icons/artist.png</thumb>
+		<action>ActivateWindow(Videos,"library://video/movies/",return)</action>
+		</shortcut>
+	</shortcuts>
