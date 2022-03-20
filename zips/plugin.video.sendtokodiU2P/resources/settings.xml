@@ -14,6 +14,7 @@
         <setting label="Supprimer une liste personnalisée" type="action" action="RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=supL)" />
         <setting label="Visuels" type="lsep" />
         <setting id="images_sizes" label="Résolution des images" type="labelenum" values="Basse|Moyenne|Haute" default="Moyenne"  />
+        <!--<setting id="newfen" label="Nouvelle fenêtre" type="bool" default="true" />-->
         <setting label="Base de données" type="lsep" />
         <setting label="Importer la base de données" type="action" action="RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=bd)" />
     </category>

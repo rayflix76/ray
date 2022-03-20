@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.sendtokodiU2P" name="U2Pplay" version="0.5.20" provider-name="noway">
+<addon id="plugin.video.sendtokodiU2P" name="U2Pplay" version="0.6.0" provider-name="noway">
   <requires>
     <trycatch>
       <try>
@@ -10,30 +10,39 @@
       </catch>
         </trycatch>
     <import addon="script.module.requests" version="2.12.4"/>
+    <import addon="script.module.pyxbmct" />
   </requires>
   <extension point="xbmc.python.pluginsource" library="service.py" >
   <provides>video</provides>
 	</extension>
   <extension point="kodi.context.item">
         <menu id="kodi.core.main">
+            <item library="menucontext/play.py">
+                <label>[COLOR yellow]Lecture[/COLOR]</label>
+                <visible>String.IsEqual(ListItem.Property(widgetmovie),true)</visible>
+            </item>
             <item library="menucontext/vus.py">
-                <label>Gestions  Vus/Non-Vus</label>
+                <label>[COLOR yellow]Gestions  Vus/Non-Vus[/COLOR]</label>
                 <visible>String.IsEqual(ListItem.Property(widgetEpisodes),true)</visible>
             </item>
             <item library="menucontext/ba.py">
-                <label>Bande Annonce</label>
+                <label>[COLOR yellow]Bande Annonce[/COLOR]</label>
                 <visible>String.IsEqual(ListItem.Property(widget),true)</visible>
             </item>
             <item library="menucontext/search.py">
-                <label>Search</label>
+                <label>[COLOR yellow]Recherche[/COLOR]</label>
                 <visible>String.IsEqual(ListItem.Property(widget),true)</visible>
             </item>
             <item library="menucontext/profil.py">
-                <label>Choix Profil</label>
+                <label>[COLOR yellow]Choix Profil[/COLOR]</label>
                 <visible>String.IsEqual(ListItem.Property(widget),true)</visible>
             </item>
             <item library="menucontext/rls.py">
-                <label>Reload Skin</label>
+                <label>[COLOR yellow]Reload Skin[/COLOR]</label>
+                <visible>String.IsEqual(ListItem.Property(widget),true)</visible>
+            </item>
+             <item library="menucontext/refresh.py">
+                <label>[COLOR yellow]Refresh[/COLOR]</label>
                 <visible>String.IsEqual(ListItem.Property(widget),true)</visible>
             </item>
         </menu>

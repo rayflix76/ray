@@ -7,6 +7,7 @@ import xbmcvfs
 import xbmcaddon
 import xbmcgui
 import xbmcplugin
+import pyxbmct
 import requests
 import io
 import unicodedata
@@ -23,6 +24,8 @@ import datetime
 from upNext import upnext_signal
 import widget
 from datetime import datetime
+from datetime import timedelta
+
 try:
     # Python 3
     from urllib.parse import parse_qsl
@@ -49,6 +52,187 @@ if pyVersionM == 8:
 else:
     import pasteCrypt2 as cryptage
 import random
+
+
+
+class FenFilmDetail(pyxbmct.AddonDialogWindow):
+
+    def __init__(self, title='', numId="", links=""):
+        """Class constructor"""
+        # Call the base class' constructor.
+        super(FenFilmDetail, self).__init__(title)
+        # Set width, height and the grid parameters
+        self.numId = numId
+        self.links = links
+        self.setGeometry(1000, 560, 50, 30)
+        # Call set controls method
+        self.set_controls()
+        # Call set navigation method.
+        self.set_navigation()
+        # Connect Backspace button to close our addon.
+        self.connect(pyxbmct.ACTION_NAV_BACK, self.close)
+
+    def set_controls(self):
+        """Set up UI controls"""
+        self.colorMenu = '0xFFFFFFFF'
+        
+        sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, (SELECT l.link FROM movieLink as l WHERE l.numId=m.numId) , m.backdrop, m.runtime, m.id \
+                        FROM movie as m WHERE m.numId={}".format(self.numId)
+        movies = extractMedias(sql=sql)
+        media = Media("movie", *movies[0])
+
+
+        #backdrop
+        image = pyxbmct.Image(media.backdrop, colorDiffuse='0x22FFFFFF')
+        self.placeControl(image, 0, 0, rowspan=50, columnspan=30)
+        logo, clearart, banner = extractFanart(self.numId)
+        urlFanart = "http://assets.fanart.tv/fanart/movie/"
+
+        #clearlogo ou title
+        if logo:
+            imageLogo = pyxbmct.Image(urlFanart + logo)
+            self.placeControl(imageLogo, 0, 0, rowspan=8, columnspan=7)
+        else:
+            label = pyxbmct.Label(media.title, font='font_MainMenu')
+            self.placeControl(label, 2, 0, columnspan=15)
+
+        #poster
+        #if clearart:
+        #    imageClearart = pyxbmct.Image(urlFanart + clearart)
+        #    self.placeControl(imageClearart, 35, 25, rowspan=12, columnspan=5)
+        #else:
+        poster = pyxbmct.Image(media.poster) 
+        self.placeControl(poster, 0, 25, rowspan=23, columnspan=5)
+
+        #menu
+        paramstring = self.links.split("*")
+        cr = cryptage.Crypt()
+        
+        dictResos = cr.extractReso([(x.split("#")[0].split("@")[0], x.split("#")[0].split("@")[1]) for x in paramstring])
+        dictResos = {x.split("#")[0].split("@")[1]: dictResos[x.split("#")[0].split("@")[1]] if dictResos[x.split("#")[0].split("@")[1]] else x.split("#")[1] for x in paramstring}
+        self.paramstring = orderLiens(dictResos, paramstring)
+        tabRelease = [dictResos[x.split("#")[0].split("@")[1]][2] for i, x in enumerate(self.paramstring)]
+        self.tabNomLien = ["#%d [COLOR red][%s - %.2fGo][/COLOR] -- [Release: %s]" %(i + 1, dictResos[x.split("#")[0].split("@")[1]][0], (int(dictResos[x.split("#")[0].split("@")[1]][1]) / 1000000000.0), tabRelease[i]) for i, x in enumerate(self.paramstring)]
+        
+        
+        #labelMenu = pyxbmct.Label('MENU', textColor=self.colorMenu)
+        #self.placeControl(labelMenu, 31, 0, columnspan=10)
+        self.menu = pyxbmct.List('font13', _itemHeight=30)
+        self.placeControl(self.menu, 29, 0, rowspan=24, columnspan=25)
+        #, "Acteurs & Réalisateur"
+        #self.menu.addItems(["[COLOR blue]Bande Annonce[/COLOR]", "[COLOR green]Lire[/COLOR]", "Suggestions", "Similaires"])
+        self.menu.addItems(self.tabNomLien)
+        self.connect(self.menu, lambda: self.listFunction(self.menu.getListItem(self.menu.getSelectedPosition()).getLabel()))
+        
+        #overview
+        #labelSynop = pyxbmct.Label('SYNOPSIS', textColor=colorMenu)
+        #self.placeControl(labelSynop, 14, 0, columnspan=10)
+        self.synop = pyxbmct.TextBox('font13', textColor='0xFFFFFFFF')
+        self.placeControl(self.synop, 10, 0, rowspan=16, columnspan=25)
+        self.synop.setText("[COLOR green]SYNOPSIS: [/COLOR]" + media.overview)
+        self.synop.autoScroll(1000, 2000, 3000)
+
+        #============================================================================ ligne notation duree =========================================
+        ligneNot = 26
+        #duree
+        text = "0xFFFFFFFF"
+        current_time = datetime.now()
+        future_time = current_time + timedelta(minutes=media.duration)
+        heureFin = future_time.strftime('%H:%M')
+        
+        label = pyxbmct.Label('%s       Durée: %d mns (se termine à %s)' %(media.year, media.duration, heureFin), textColor=self.colorMenu)
+        self.placeControl(label, ligneNot, 0, columnspan=12)
+
+        
+        #notation
+        label = pyxbmct.Label('Note %0.1f/10' %float(media.popu),textColor=self.colorMenu)
+        self.placeControl(label, ligneNot, 12, columnspan=12)
+        #self.slider = pyxbmct.Slider(orientation=xbmcgui.HORIZONTAL)
+        #self.placeControl(self.slider, ligneNot + 1, 14, pad_y=1, rowspan=2, columnspan=4)  
+        #self.slider.setPercent(media.popu * 10)  
+
+        #fav HK
+        
+        self.radiobutton = pyxbmct.RadioButton("Ajouter Fav's HK", textColor=self.colorMenu)
+        self.placeControl(self.radiobutton, 26, 20, columnspan=5, rowspan=3)
+        self.connect(self.radiobutton, self.radio_update)
+        if __addon__.getSetting("bookonline") != "false":
+            listeM = widget.responseSite("http://%s/requete.php?name=%s&type=favs&media=movies" %(__addon__.getSetting("bookonline_site"), __addon__.getSetting("bookonline_name")))
+            listeM = [int(x) for x in listeM]
+        else:
+            listeM = list(widget.extractFavs())
+        if int(self.numId) in listeM:
+            self.radiobutton.setSelected(True)
+            self.radiobutton.setLabel("Retirer Fav's HK")
+        #=============================================================================================================================================
+
+        #genres
+        label = pyxbmct.Label('    GENRES')
+        self.placeControl(label, 23, 26, columnspan=3)
+
+        genres = [x.strip() for x in media.genre.split(",")]
+        x, y = 25, 25
+        for i, genre in enumerate(genres):
+            f = xbmcvfs.translatePath('special://home/addons/plugin.video.sendtokodiU2P/resources/png/genre/%s.png' %genre)
+            image = pyxbmct.Image(f)
+            pas = 9
+            self.placeControl(image, x, y, rowspan=pas, columnspan=3)
+            if i % 2:
+                x += (pas - 2) 
+                y -= 2
+            else:
+                y += 2 
+            if i == 3:
+                break
+
+        
+    def set_navigation(self):
+        """Set up keyboard/remote navigation between controls."""
+        
+        self.menu.controlUp(self.radiobutton)
+        #self.menu.controlDown(self.tabCast[0])
+        #self.menu.controlLeft(self.tabCast[0])
+        #self.radiobutton.controlUp(self.tabCast[0])
+        self.menu.controlRight(self.radiobutton)
+        self.radiobutton.controlRight(self.menu)
+        self.radiobutton.controlLeft(self.menu)
+        self.radiobutton.controlDown(self.menu)
+        self.setFocus(self.menu)
+            
+
+        
+    def radio_update(self):
+        # Update radiobutton caption on toggle
+        #liste favs
+        if self.radiobutton.isSelected():
+            self.radiobutton.setLabel("Retirer Fav's HK")
+            gestionFavHK({"mode": "ajout", "u2p": self.numId, "typM": "movies"})
+        else:
+            self.radiobutton.setLabel("Ajouter Fav's HK")
+            gestionFavHK({"mode": "sup", "u2p": self.numId, "typM": "movies"})
+
+    def listFunction(self, tx):
+        #lsite fonction du menu
+        self.close()
+        link = self.paramstring[self.tabNomLien.index(tx)] 
+        #showInfoNotification(link)
+        #
+        playMediaHK({"u2p":self.numId, "typM": "movies", "lien": link, "skin": "1"})
+
+        """
+        if "Bande" in tx:
+            getBa({"u2p": self.numId, "typM": "movie"})
+        elif "Lire" in tx:
+            affLiens2({"u2p": self.numId, "lien": self.links})
+        elif "Simi" in tx:
+            loadSimReco2({"u2p": self.numId, "typ": "Similaires", "typM": "movie"})
+        elif "Sugg" in tx:
+            loadSimReco2({"u2p": self.numId, "typ": "Recommendations", "typM": "movie"})
+        elif "Act" in tx:
+            affCast2({"u2p": self.numId, "typM": "movie"})   
+        """
+        
+
 
 
 class replacement_stderr(sys.stderr.__class__):
@@ -289,9 +473,18 @@ def detailsMedia(params):
     xbmcplugin.setPluginCategory(__handle__, "Menu")
     xbmcplugin.setContent(__handle__, 'episodes')
 
-    categories = [("[COLOR red]Bande Annonce[/COLOR]", {"action": "ba", "u2p": numId, "typM": typMedia}), ("[COLOR green]Lire[/COLOR]", {"action": "afficheLiens", "lien": links, "u2p": numId}), ("Acteurs", {"action": "affActeurs", "u2p": numId, "typM": typMedia}),\
-             ("Similaires", {"action": "suggest", "u2p": numId, "typ": "Similaires", "typM": typMedia}), ("Recommandations", {"action": "suggest", "u2p": numId, "typ": "Recommendations", "typM": typMedia})]
-    
+    sql = "SELECT s.title, s.poster, s.overview, s.numId FROM saga AS s WHERE s.numId=(SELECT t.numIdSaga FROM sagaTitle AS t WHERE t.numId={})".format(u2p)
+    saga = extractMedias(sql=sql)
+
+    if saga:
+        categories = [("[COLOR red]Bande Annonce[/COLOR]", {"action": "ba", "u2p": numId, "typM": typMedia}), ("[COLOR green]Lire[/COLOR]", {"action": "afficheLiens", "lien": links, "u2p": numId}),\
+                ("Saga", {"action": "MenuFilm", "famille": "sagaListe", "numIdSaga": saga[0][3]}), ("Acteurs", {"action": "affActeurs", "u2p": numId, "typM": typMedia}),\
+                ("Similaires", {"action": "suggest", "u2p": numId, "typ": "Similaires", "typM": typMedia}), ("Recommandations", {"action": "suggest", "u2p": numId, "typ": "Recommendations", "typM": typMedia})]
+    else:
+        categories = [("[COLOR red]Bande Annonce[/COLOR]", {"action": "ba", "u2p": numId, "typM": typMedia}), ("[COLOR green]Lire[/COLOR]", {"action": "afficheLiens", "lien": links, "u2p": numId}),\
+                ("Acteurs", {"action": "affActeurs", "u2p": numId, "typM": typMedia}),\
+                ("Similaires", {"action": "suggest", "u2p": numId, "typ": "Similaires", "typM": typMedia}), ("Recommandations", {"action": "suggest", "u2p": numId, "typ": "Recommendations", "typM": typMedia})]
+        
     #liste lastview
     if __addon__.getSetting("bookonline") != "false":
         listeView = widget.responseSite("http://%s/requete.php?name=%s&type=view&media=movie" %(__addon__.getSetting("bookonline_site"), __addon__.getSetting("bookonline_name")))    
@@ -315,7 +508,10 @@ def detailsMedia(params):
     
 
     for cat in categories:
-        lFinale = [title, overview, year, genre, backdrop, popu, numId, poster] 
+        if "Saga" in cat[0]:
+            lFinale = [saga[0][0], saga[0][2], year, genre, backdrop, popu, numId, saga[0][1]] 
+        else:
+            lFinale = [title, overview, year, genre, backdrop, popu, numId, poster] 
         media = Media("menu", *lFinale)
         media.typeMedia = typMedia
         
@@ -330,19 +526,18 @@ def addDirectoryMenu(name, isFolder=True, parameters={}, media="" ):
             "year": media.year, 'mediatype': media.typeMedia, "rating": media.popu})
     if "Saison" in name:
         commands = []
-        commands.append(('Gestion Vus/Non-Vus', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=vuNonVu&saison=%d&u2p=%s&refresh=0)' %(media.saison, media.numId)))
+        commands.append(('[COLOR yellow]Gestion Vus/Non-Vus[/COLOR]', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=vuNonVu&saison=%d&u2p=%s&refresh=1)' %(media.saison, media.numId)))
         li.addContextMenuItems(commands)
         isWidget = xbmc.getInfoLabel('Container.PluginName')
         if "U2P" not in isWidget:
             li.setProperty('widgetEpisodes', 'true')    
-            li.setProperty('vus', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=vuNonVu&saison=%d&u2p=%s&refresh=0)' %(media.saison, media.numId))
+            li.setProperty('vus', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=vuNonVu&saison=%d&u2p=%s&refresh=1)' %(media.saison, media.numId))
             
     li.setArt({'icon': media.backdrop,
                 "thumb": media.poster,
                 'poster':media.poster,
                 'fanart': media.backdrop
                 })
-    notice("adddirectoryMenu")
     
     url = sys.argv[0] + '?' + urlencode(parameters)
     return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=li, isFolder=isFolder)
@@ -381,6 +576,31 @@ def detailsTVOld(params):
                     affEpisodes(numId, choix[selected])
 '''
 
+def getEpisodesSaison(numId):
+    try:
+        if __addon__.getSetting("bookonline") != "false":
+            vus = widget.responseSite("http://%s/requete.php?name=%s&type=getvu" %(__addon__.getSetting("bookonline_site"), __addon__.getSetting("bookonline_name")))
+        else:
+            vus =  widget.getVu("tvshow")
+    except:
+        vus = []
+    vus = [("Saison %s" %x.split("-")[1].zfill(2), x.split("-")[2])for x in vus if x.split("-")[0] == str(numId)]
+    sql = "SELECT saison, episode FROM tvshowEpisodes WHERE numId={}".format(numId)
+    liste = extractMedias(sql=sql)
+    dictSaisons = {}
+    for saison in list(set([x[0] for x in liste])):
+        nbTotal = len([x for x in liste if x[0] == saison])
+        nbVus = len([x for x in vus if x[0] == saison])
+        if nbVus == 0:
+            c = "red"
+        elif nbVus == nbTotal:
+            c = "green"
+        else:
+            c = "orange"
+        dictSaisons[saison] = (c, nbVus, nbTotal)
+    return dictSaisons
+
+
 def detailsTV(params):
     #notice(params)
     #typMedia = xbmc.getInfoLabel('ListItem.DBTYPE')
@@ -399,7 +619,7 @@ def detailsTV(params):
         else:
             sql = "SELECT DISTINCT saison FROM tvshowEpisodes WHERE numId={}".format(numId)
             saisons = extractMedias(sql=sql, unique=1)
-        
+        dictSaisonsVU = getEpisodesSaison(u2p)
         sql = "SELECT title, overview, year, genre, backdrop, popu, numId, poster, runtime FROM tvshow WHERE numId={}".format(numId)
         liste = extractMedias(sql=sql)
         if liste:
@@ -411,7 +631,7 @@ def detailsTV(params):
         overview = "%s\nsynopsis: %s \nAnnée: %s\nGenre: %s\nNote: %.2f\nDurée: %d mns" %(title, overview[:150] + "...", year, genre, popu, runtime)
         xbmcplugin.setPluginCategory(__handle__, "Menu")
         xbmcplugin.setContent(__handle__, 'episodes')
-        choixsaisons = [("[COLOR green]%s[/COLOR]" %x, {"action": "visuEpisodes", "u2p": numId, "saison": x}) for x in saisons]
+        choixsaisons = [("%s [COLOR %s](%d/%d)[/COLOR]" %(x, dictSaisonsVU[x][0], dictSaisonsVU[x][1], dictSaisonsVU[x][2]), {"action": "visuEpisodes", "u2p": numId, "saison": x}) for x in saisons]
         categories = [("[COLOR red]Bande Annonce[/COLOR]", {"action": "ba", "u2p": numId, "typM": typMedia})] + choixsaisons + [("Similaires", {"action": "suggest", "u2p": numId, "typ": "Similaires",\
              "typM": typMedia}), ("Recommandations", {"action": "suggest", "u2p": numId, "typ": "Recommendations", "typM": typMedia})]
 
@@ -444,7 +664,8 @@ def detailsTV(params):
                 numSaison = int(cat[1]["saison"].split(" ")[1])
                 try:
                     tab = dictSaisons[numSaison]
-                    lFinale = [tab[0], tab[2], year, genre, backdrop, popu, numId, tab[1]]
+                    lFinale = [title, tab[2], year, genre, backdrop, popu, numId, tab[1]]
+                    #lFinale = [tab[0], tab[2], year, genre, backdrop, popu, numId, tab[1]]
                 except Exception as e:
                     notice(str(e))
 
@@ -532,12 +753,12 @@ def addDirectoryEpisodes(name, isFolder=True, parameters={}, media="" ):
               "fanart": media.backdrop})
     li.setProperty('IsPlayable', 'true')
     commands = []
-    commands.append(('Gestion Vus/Non-Vus', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=vuNonVu&saison=%d&u2p=%s&refresh=1)' %(media.saison, media.numId)))
+    commands.append(('[COLOR yellow]Gestion Vus/Non-Vus[/COLOR]', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=vuNonVu&saison=%d&u2p=%s&refresh=1)' %(media.saison, media.numId)))
     li.addContextMenuItems(commands, replaceItems=False)
     isWidget = xbmc.getInfoLabel('Container.PluginName')
     if "U2P" not in isWidget:
         li.setProperty('widgetEpisodes', 'true')    
-        li.setProperty('vus', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=vuNonVu&saison=%d&u2p=%s&refresh=0)' %(media.saison, media.numId))
+        li.setProperty('vus', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=vuNonVu&saison=%d&u2p=%s&refresh=1)' %(media.saison, media.numId))
     
     url = sys.argv[0] + '?' + urlencode(parameters)
     return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=li, isFolder=isFolder)
@@ -557,7 +778,7 @@ def affLiens2(params):
     dictResos = cr.extractReso([(x.split("#")[0].split("@")[0], x.split("#")[0].split("@")[1]) for x in paramstring])
     dictResos = {x.split("#")[0].split("@")[1]: dictResos[x.split("#")[0].split("@")[1]] if dictResos[x.split("#")[0].split("@")[1]] else x.split("#")[1] for x in paramstring}
     paramstring = orderLiens(dictResos, paramstring)
-    tabNomLien = ["Lien N° %d (%s - %.2fGo)" %(i + 1, dictResos[x.split("#")[0].split("@")[1]][0], (int(dictResos[x.split("#")[0].split("@")[1]][1]) / 1000000000.0)) for i, x in enumerate(paramstring)]
+    tabNomLien = ["[COLOR %s]#%d[/COLOR]| %s - %.2fGo" %(colorLiens(dictResos[x.split("#")[0].split("@")[1]][0]), i + 1, dictResos[x.split("#")[0].split("@")[1]][0], (int(dictResos[x.split("#")[0].split("@")[1]][1]) / 1000000000.0)) for i, x in enumerate(paramstring)]
     tabRelease = [dictResos[x.split("#")[0].split("@")[1]][2] for i, x in enumerate(paramstring)]
     tabLiens = [(x, paramstring[i], tabRelease[i]) for i, x in enumerate(tabNomLien)]
     #notice(numId)
@@ -579,7 +800,7 @@ def affLiens(numId, typM, liste):
         media.typeMedia = typM
         if typM == "movie":
             addDirectoryFilms("%s" %(l[0]), isFolder=False, parameters={"action": "playHK", "lien": media.link, "u2p": media.numId}, media=media)
-    xbmcplugin.endOfDirectory(handle=__handle__, succeeded=True)
+    xbmcplugin.endOfDirectory(handle=__handle__, succeeded=True, cacheToDisc=True)
 
 def orderLiens(dictResos, paramstring):
     tabLinks = []
@@ -590,7 +811,24 @@ def orderLiens(dictResos, paramstring):
         return [x[-1] for x in sorted(tabLinks, key=lambda taille: taille[1], reverse=True)]
     except:
         return paramstring
-    
+
+def colorLiens(lien):
+    #for c in [("2160", "[COLOR fuchsia]2160[/COLOR]"), ("3D", "[COLOR yellow]3D[/COLOR]"),\
+    #     ("1080", "[COLOR goldenrod]1080[/COLOR]"), ("720", "[COLOR seagreen]720[/COLOR]"), ("480", "[COLOR dodgerblue]480[/COLOR]")]:
+    #    lien = lien.replace(c[0], c[1])
+    if "2160" in lien or re.search("4K", lien, re.I):
+        c = "red"
+    elif re.search("3D", lien, re.I):
+        c = "yellow"
+    elif "1080" in lien:
+        c = "fuchsia"
+    elif "720" in lien:
+        c = "seagreen"
+    elif "480" in lien:
+        c = "dodgerblue"
+    else:
+        c = "white"
+    return c   
 
 def getParams(paramstring, u2p=0, saisonIn=1):
     result = {}
@@ -661,9 +899,9 @@ def getParams(paramstring, u2p=0, saisonIn=1):
         tabNomLien = []
         paramstring = orderLiens(dictResos, paramstring)
         try:
-            tabNomLien += ["Lien N° %d (%s - %.2fGo)" %(i + 1, dictResos[x.split("#")[0].split("@")[1]][0], (int(dictResos[x.split("#")[0].split("@")[1]][1]) / 1000000000.0)) for i, x in enumerate(paramstring)]
+            tabNomLien += ["#%d (%s - %.2fGo)" %(i + 1, dictResos[x.split("#")[0].split("@")[1]][0], (int(dictResos[x.split("#")[0].split("@")[1]][1]) / 1000000000.0)) for i, x in enumerate(paramstring)]
         except:
-            tabNomLien += ["Lien N° %d (ind)" %(i + 1) for i, x in enumerate(paramstring)]
+            tabNomLien += ["#%d (ind)" %(i + 1) for i, x in enumerate(paramstring)]
         #if u2p and numId != "divers":    
         #    tabNomLien += ["Casting", "Similaires", "Recommendations"]
         selected = dialog.select("Choix lien", tabNomLien, int(timing) * 1000, pos)
@@ -790,12 +1028,26 @@ def loadSimReco2(params):
 
     affMovies(typM, movies[:-1])
 
+def extractFanart(numId):
+    cnx = sqlite3.connect(__repAddon__ + "medias.bd")
+    cur = cnx.cursor()
+    sql = "SELECT logo, clearart, banner FROM movieFanart WHERE numId={}".format(numId)
+    cur.execute(sql)
+    liste = cur.fetchall()
+    cur.close()
+    cnx.close()
+    if liste:
+        logo, clearart, banner = liste[0]
+    else:
+        logo, clearart, banner = "", "", ""
+    return logo, clearart, banner
+
 def extractMedias(limit=0, offset=1, sql="", unique=0):
     cnx = sqlite3.connect(__repAddon__ + "medias.bd")
     cur = cnx.cursor()
     def normalizeTitle(tx):
         #tx = re.sub(r''' {2,}''', ' ', re.sub(r''':|;|'|"|,''', ' ', tx))
-        tx = re.sub(r''':|;|'|"|,''', ' ', tx)
+        tx = re.sub(r''':|;|'|"|,|\-''', ' ', tx)
         tx = re.sub(r''' {2,}''', ' ', tx)
         tx = str(tx).lower()
         return unicodedata.normalize('NFD', tx).encode('ascii','ignore').decode("latin-1")
@@ -841,10 +1093,10 @@ def ventilationHK():
 def diversHK():
     if "groupe" in __params__.keys():
         #title, overview, year, poster, link, numId
-        sql = "SELECT title, groupe||' ('||repo||')', '', '', 'divers', '', '', link, '', '' FROM divers WHERE repo='{}' AND groupe='{}'".format(__params__["repo"].replace("'", "''"), __params__["groupe"].replace("'", "''"))
+        sql = "SELECT title, groupe||' ('||repo||')', '', '', 'divers', '', '', link, '', '' FROM divers WHERE repo='{}' AND groupe='{}' ORDER BY id DESC".format(__params__["repo"].replace("'", "''"), __params__["groupe"].replace("'", "''"))
         movies = extractMedias(sql=sql)
         #notice(movies)
-        affMovies("movie", sorted(movies))
+        affMovies("movie", movies)
 
     elif "repo" in __params__.keys():
         if __params__["repo"] == "adulte":
@@ -857,7 +1109,7 @@ def diversHK():
         else:
             ok = True
         if ok:
-            sql = "SELECT DISTINCT groupe FROM divers WHERE repo='{}'".format(__params__["repo"].replace("'", "''")) 
+            sql = "SELECT DISTINCT groupe FROM divers WHERE repo='{}' ORDER BY id DESC".format(__params__["repo"].replace("'", "''")) 
             listeRep = extractMedias(sql=sql, unique=1)
             choix = [(x, {"action":"MenuDivers", "repo":__params__["repo"], "groupe": x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', x) for x in sorted(listeRep)]
             addCategorieMedia(choix)
@@ -868,7 +1120,13 @@ def diversHK():
         addCategorieMedia(choix)
     
 
-def mediasHK():
+def mediasHK(params={}):
+    notice("params: " + str(params))
+    if params:
+        __params__["famille"] = params["famille"]
+        __params__["u2p"] = params["u2p"]
+        __params__["numIdSaga"] = params["u2p"]
+
     typM = "movie"
     try:
         offset = int(__params__["offset"])
@@ -884,7 +1142,7 @@ def mediasHK():
     if "famille" in __params__.keys():
         movies = []
         #====================================================================================================================================================================================
-        if __params__["famille"] == "Last View":
+        if __params__["famille"] in ["Last View", "Mon historique"]:
             if __addon__.getSetting("bookonline") != "false":
                 liste = widget.responseSite("http://%s/requete.php?name=%s&type=view&media=movie" %(__addon__.getSetting("bookonline_site"), __addon__.getSetting("bookonline_name")))
             else:
@@ -902,7 +1160,7 @@ def mediasHK():
             #        WHERE m.numId IN ({})".format(",".join([str(x) for x in liste]))
             #movies = extractMedias(sql=sql)
         #===============================================================================================================================================================================
-        elif __params__["famille"] == "Fav'S HK":
+        elif __params__["famille"] in ["Fav'S HK", "Mes favoris HK"]:
             if __addon__.getSetting("bookonline") != "false":
                 notice("http://%s/requete.php?name=%s&type=favs&media=movies" %(__addon__.getSetting("bookonline_site"), __addon__.getSetting("bookonline_name")))
                 liste = widget.responseSite("http://%s/requete.php?name=%s&type=favs&media=movies" %(__addon__.getSetting("bookonline_site"), __addon__.getSetting("bookonline_name")))
@@ -913,14 +1171,15 @@ def mediasHK():
             __params__["favs"] = __addon__.getSetting("bookonline_name")
             movies = extractMedias(sql=sql)
         #====================================================================================================================================================================================
-        elif __params__["famille"] == "Last In":
+        elif __params__["famille"] in ["Last In", "Derniers Ajouts"]:
             sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, (SELECT l.link FROM movieLink as l WHERE l.numId=m.numId) , m.backdrop, m.runtime, m.id FROM movie as m"\
             + " ORDER BY m.id DESC" + " LIMIT {} OFFSET {}".format(limit, offset)
             __params__["offset"] = offset
             movies = extractMedias(sql=sql)
         #====================================================================================================================================================================================
-        elif __params__["famille"] == "#Years/Last In":
-            sql = "SELECT numId FROM movieFamille WHERE famille IN ('#Documentaires', '#Concerts', '#Spectacles', '#Sports')" 
+        elif __params__["famille"] in ["#Years/Last In", "Nouveautés par année"]:
+            #sql = "SELECT numId FROM movieFamille WHERE famille IN ('#Documentaires', '#Concerts', '#Spectacles')" 
+            sql = "SELECT numId FROM movieFamille WHERE famille IN (SELECT o.nom FROM movieTypeFamille as o WHERE o.typFamille='out')" 
             tabNumId = extractMedias(sql=sql, unique=1)
             sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, (SELECT l.link FROM movieLink as l WHERE l.numId=m.numId) , m.backdrop, m.runtime, m.id \
                         FROM movie as m WHERE m.numId NOT IN ({})  AND m.year!='' AND genre NOT LIKE '%%Documentaire%%' AND genre NOT LIKE '%%Animation%%' ORDER BY ".format(",".join([str(x) for x in tabNumId])) + " year DESC, id DESC"\
@@ -928,8 +1187,9 @@ def mediasHK():
             __params__["offset"] = offset
             movies = extractMedias(sql=sql)
         #====================================================================================================================================================================================
-        elif __params__["famille"] == "#Notations":
-            sql = "SELECT numId FROM movieFamille WHERE famille IN ('#Documentaires', '#Concerts', '#Spectacles')" 
+        elif __params__["famille"] in ["#Notations", "Les mieux notés"]:
+            #sql = "SELECT numId FROM movieFamille WHERE famille IN ('#Documentaires', '#Concerts', '#Spectacles')" 
+            sql = "SELECT numId FROM movieFamille WHERE famille IN (SELECT o.nom FROM movieTypeFamille as o WHERE o.typFamille='out')" 
             tabNumId = extractMedias(sql=sql, unique=1)
             sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, (SELECT l.link FROM movieLink as l WHERE l.numId=m.numId) , m.backdrop, m.runtime, m.id \
                         FROM movie as m WHERE m.numId NOT IN ({})  AND m.year!='' AND genre NOT LIKE '%%Documentaire%%' AND genre NOT LIKE '%%Animation%%' AND m.popu>7 AND m.popu<9 ORDER BY ".format(",".join([str(x) for x in tabNumId])) + " m.popu DESC"\
@@ -963,7 +1223,8 @@ def mediasHK():
                 movies = extractMedias(sql=sql)
         #====================================================================================================================================================================================
         elif __params__["famille"] == "Multi-Tri":
-            sql = "SELECT numId FROM movieFamille WHERE famille IN ('#Documentaires', '#Concerts', '#Spectacles')" 
+            #sql = "SELECT numId FROM movieFamille WHERE famille IN ('#Documentaires', '#Concerts', '#Spectacles')" 
+            sql = "SELECT numId FROM movieFamille WHERE famille IN (SELECT o.nom FROM movieTypeFamille as o WHERE o.typFamille='out')" 
             tabNumId = extractMedias(sql=sql, unique=1)
             dictTri = {"Année puis Date entrée": "year DESC, id DESC", "Date entrée": "id DESC", "Année puis Ordre Alpha": "year DESC, title COLLATE NOCASE ASC", "Ordre Alpha A-Z": "title COLLATE NOCASE ASC",\
              "Ordre Alpha Z-A": "title COLLATE NOCASE DESC"}
@@ -979,7 +1240,7 @@ def mediasHK():
                         + " LIMIT {} OFFSET {}".format(limit, offset)
                 movies = extractMedias(sql=sql)
         #====================================================================================================================================================================================
-        elif __params__["famille"] == "Search":
+        elif __params__["famille"] in ["Search", "Recherche"]:
             dialog = xbmcgui.Dialog()
             d = dialog.input("Recherche (mini 3 lettres)", type=xbmcgui.INPUT_ALPHANUM, defaultt="")
             if len(d) > 2:
@@ -987,7 +1248,7 @@ def mediasHK():
                         FROM movie as m WHERE normalizeTitle(m.title) LIKE normalizeTitle({}) ORDER BY title COLLATE NOCASE ASC".format("'%" + str(d).replace("'", "''") + "%'")
                 movies = extractMedias(sql=sql)
         #====================================================================================================================================================================================
-        elif __params__["famille"] == "Groupes Contrib":
+        elif __params__["famille"] in ["Groupes Contrib", "Listes des contributeurs"]:
             sql = "SELECT DISTINCT groupeParent FROM movieGroupe"
             listeRep = extractMedias(sql=sql, unique=1)
             choix = [(x, {"action":"MenuFilm", "groupe": x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', x) for x in sorted(listeRep)]
@@ -1005,7 +1266,7 @@ def mediasHK():
             choix = [(x, {"action":"MenuFilm", "widget": x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', x) for x in sorted(listeRep)]
             addCategorieMedia(choix)
         #====================================================================================================================================================================================
-        elif __params__["famille"] == "Saga":
+        elif __params__["famille"] == "Sagas":
             sql = "SELECT numId, title, overview, poster, poster FROM saga"
             movies = extractMedias(sql=sql)
             typM = "saga"
@@ -1046,11 +1307,30 @@ def mediasHK():
                 sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, (SELECT l.link FROM movieLink as l WHERE l.numId=m.numId) , m.backdrop, m.runtime, m.id \
                         FROM movie as m WHERE " + genresOk + " ORDER BY m.id DESC" + " LIMIT {} OFFSET {}".format(limit, offset)
                 movies = extractMedias(sql=sql)
-                
-
+        #====================================================================================================================================================================================
+        elif __params__["famille"] == "genres":
+            rechGenre = __params__["typgenre"] 
+            if '#' in rechGenre:
+                sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, (SELECT l.link FROM movieLink as l WHERE l.numId=m.numId) , m.backdrop, m.runtime, m.id \
+                    FROM movie as m WHERE m.numId IN (SELECT f.numId FROM movieFamille as f WHERE f.famille='{}')".format(rechGenre)\
+                    + orderDefault + " LIMIT {} OFFSET {}".format(limit, offset)
+            else:
+                sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, (SELECT l.link FROM movieLink as l WHERE l.numId=m.numId) , m.backdrop, m.runtime, m.id \
+                            FROM movie as m WHERE m.genre LIKE '%%{}%%' ORDER BY m.id DESC".format(rechGenre) + " LIMIT {} OFFSET {}".format( limit, offset)       
+            movies = extractMedias(sql=sql)
+        #==================================================================================================================================================================================   
         elif __params__["famille"] == "Favoris":
             pass
         #====================================================================================================================================================================================
+        elif __params__["famille"] in ["Derniers Ajouts Films", "Les plus populaires TMDB/trakt", "#Film Last/In", "#Best TMDB-TRAKT"]:
+            dictCf ={"Derniers Ajouts Films": "#Films Last/In", "Les plus populaires TMDB/trakt": "#Best TMDB-TRAKT", "#Films Last/In": "#Films Last/In", "#Best TMDB-TRAKT": "#Best TMDB-TRAKT"}
+            sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, (SELECT l.link FROM movieLink as l WHERE l.numId=m.numId) , m.backdrop, m.runtime, m.id \
+                    FROM movie as m WHERE m.numId IN (SELECT f.numId FROM movieFamille as f WHERE f.famille='{}')".format(dictCf[__params__["famille"]])\
+                    + orderDefault + " LIMIT {} OFFSET {}".format(limit, offset)
+            movies = extractMedias(sql=sql)
+            __params__["offset"] = offset
+            
+
         else:
             #ORDER BY m.title COLLATE NOCASE ASC
             sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, (SELECT l.link FROM movieLink as l WHERE l.numId=m.numId) , m.backdrop, m.runtime, m.id \
@@ -1059,8 +1339,8 @@ def mediasHK():
             movies = extractMedias(sql=sql)
             __params__["offset"] = offset
             #sorted(movies, key=lambda x: x[-1], reverse=True)
-
         affMovies(typM, movies, params=__params__)
+
     if "groupe" in __params__.keys():
         sql = "SELECT  groupeFille FROM movieGroupe WHERE groupeParent='{}'".format(__params__["groupe"].replace("'", "''"))
         listeRep = extractMedias(sql=sql, unique=1)
@@ -1074,12 +1354,17 @@ def mediasHK():
         else:
             choix = [(x, {"action":"MenuFilm", "groupe": x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', x) for x in sorted(listeRep)]
             addCategorieMedia(choix)
+
     elif "trakt" in __params__.keys():
         sql = "SELECT  groupeFille FROM movieTrakt WHERE groupeParent='{}'".format(__params__["trakt"].replace("'", "''"))
         listeRep = extractMedias(sql=sql, unique=1)
-        if len(listeRep) == 1 or not listeRep:            
+        if len(listeRep) == 1 or not listeRep:  
+            if listeRep:
+                gr = listeRep[0]
+            else: 
+                gr = __params__["trakt"].replace("'", "''")         
             tabMovies = []
-            sql = "SELECT d.numId FROM movieTraktDetail as d WHERE d.groupe='{}' ORDER BY d.id ASC".format(__params__["trakt"].replace("'", "''"))            
+            sql = "SELECT d.numId FROM movieTraktDetail as d WHERE d.groupe='{}' ORDER BY d.id ASC".format(gr)      
             listeNumId = extractMedias(sql=sql, unique=1)
             for n in listeNumId:
                 if n:
@@ -1105,17 +1390,25 @@ def mediasHK():
 
     elif "widget" in __params__.keys():
         sql = widget.getListe(__params__["widget"])
-        if sql:
-            movies = extractMedias(sql=sql)
-            affMovies(typM, movies)
+        movies = extractMedias(sql=sql)
+        affMovies(typM, movies)
+
+
+    elif "typfamille" in __params__.keys():
+        sql = "SELECT nom FROM movieTypeFamille WHERE typFamille='{}'".format(__params__["typfamille"])
+        listeRepData = extractMedias(sql=sql, unique=1)
+        choix = [(x, {"action":"MenuFilm", "famille":x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/%s.png' %x, x) for x in listeRepData]
+        addCategorieMedia(choix)
 
     else:
-        sql = "SELECT DISTINCT famille FROM movieFamille"
-        listeRep = extractMedias(sql=sql, unique=1)
-        for cat in ["Last In", "Last View", "Fav'S HK", "Groupes Contrib", "Saga", "Liste Aléatoire", "#Years/Last In", "#Notations", "Spécial Widget", "Mes Widgets"]:
-            listeRep.append(cat)
-        choix = [(x, {"action":"MenuFilm", "famille":x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/%s.png' %x, x) for x in listeRep]
+        listeRep = ["Derniers Ajouts", "Derniers Ajouts Films", "Nouveautés par année", "Les mieux notés", "Les plus populaires TMDB/trakt", "Mon historique", "Mes favoris HK", "Listes des contributeurs",\
+             "Sagas", "Liste Aléatoire", "Spécial Widget", "Mes Widgets"]
+        sql = "SELECT DISTINCT typFamille FROM movieTypeFamille"
+        listeRepData = [x for x in extractMedias(sql=sql, unique=1) if x not in ["filtre", "genre", "out"]] 
+        choix = [(x, {"action":"MenuFilm", "famille":x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/%s.png' %x, x) for x in listeRep]        
+        choix += [(x, {"action":"MenuFilm", "typfamille":x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/%s.png' %x, x) for x in listeRepData]
         choix.append(("Filtres", {"action":"filtres", "typM": "movie"}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/Filtres.png', "Filtres"))
+        choix.append(("Genres", {"action":"genres", "typM": "movie"}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', "Genres"))
         addCategorieMedia(choix)
 
         
@@ -1133,10 +1426,12 @@ def seriesHK():
 
     orderDefault = getOrderDefault()
 
+    xbmcgui.Window(10000).setProperty('nomFenetre', '')
+
     if "famille" in __params__.keys():
         movies = []
         #===============================================================================================================================================================================
-        if __params__["famille"] == "Last View":
+        if __params__["famille"] in ["Last View", "Mon historique"]:
             if __addon__.getSetting("bookonline") != "false":
                 liste = widget.responseSite("http://%s/requete.php?name=%s&type=view&media=tv" %(__addon__.getSetting("bookonline_site"), __addon__.getSetting("bookonline_name")))
             else:
@@ -1154,7 +1449,7 @@ def seriesHK():
             #        WHERE m.numId IN ({})".format(",".join([str(x) for x in liste]))
             #movies = extractMedias(sql=sql)
         #===============================================================================================================================================================================
-        elif __params__["famille"] == "Fav'S HK":
+        elif __params__["famille"] in ["Fav'S HK", "Mes favoris HK"]:
             if __addon__.getSetting("bookonline") != "false":
                 liste = widget.responseSite("http://%s/requete.php?name=%s&type=favs&media=tvshow" %(__addon__.getSetting("bookonline_site"), __addon__.getSetting("bookonline_name")))
             else:
@@ -1170,13 +1465,13 @@ def seriesHK():
             choix = [(x, {"action":"MenuSerie", "widget": x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', x) for x in sorted(listeRep)]
             addCategorieMedia(choix)
         #===============================================================================================================================================================================
-        elif __params__["famille"] == "Last In":
+        elif __params__["famille"] in ["Last In", "Derniers Ajouts"]:
             sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, m.backdrop, m.runtime, m.id FROM tvshow as m ORDER BY m.id DESC"\
             + " LIMIT {} OFFSET {}".format(limit, offset)
             __params__["offset"] = offset
             movies = extractMedias(sql=sql)
         #====================================================================================================================================================================================
-        elif __params__["famille"] == "#Years/Last In":
+        elif __params__["famille"] in ["#Years/Last In", "Nouveautés par année"]:
             sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, m.backdrop, m.runtime, m.id \
                         FROM tvshow as m WHERE m.genre NOT LIKE '%%Documentaire%%' AND m.genre NOT LIKE '%%Animation%%' AND m.genre NOT LIKE '%%Kids%%' ORDER BY " +  " year DESC, id DESC"\
                         + " LIMIT {} OFFSET {}".format(limit, offset)   
@@ -1200,7 +1495,7 @@ def seriesHK():
                         + " LIMIT {} OFFSET {}".format(limit, offset)
                 movies = extractMedias(sql=sql)
         #===============================================================================================================================================================================
-        elif __params__["famille"] == "Search":
+        elif __params__["famille"]  in ["Search", "Recherche"]:
             dialog = xbmcgui.Dialog()
             d = dialog.input("Recherche (mini 3 lettres)", type=xbmcgui.INPUT_ALPHANUM, defaultt="")
             if len(d) > 2:
@@ -1255,6 +1550,17 @@ def seriesHK():
                 sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, m.backdrop, m.runtime, m.id \
                         FROM tvshow as m WHERE " + genresOk + " LIMIT {} OFFSET {}".format(limit, offset)
                 movies = extractMedias(sql=sql)
+        #====================================================================================================================================================================================
+        elif __params__["famille"] == "genres":
+            rechGenre = __params__["typgenre"] 
+            if '#' in rechGenre:
+                sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, m.backdrop, m.runtime, m.id \
+                    FROM tvshow as m WHERE m.numId IN (SELECT f.numId FROM tvshowFamille as f WHERE f.famille='{}')".format(rechGenre)\
+                    + orderDefault + " LIMIT {} OFFSET {}".format(limit, offset)
+            else:
+                sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, m.backdrop, m.runtime, m.id \
+                            FROM tvshow as m WHERE m.genre LIKE '%%{}%%' ORDER BY m.id DESC".format(rechGenre) + " LIMIT {} OFFSET {}".format( limit, offset)       
+            movies = extractMedias(sql=sql)
         #===============================================================================================================================================================================
         elif __params__["famille"] == "#Documentaires":
             sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, m.backdrop, m.runtime, m.id \
@@ -1263,7 +1569,7 @@ def seriesHK():
             __params__["offset"] = offset
             movies = extractMedias(sql=sql)
         #===============================================================================================================================================================================
-        elif __params__["famille"] == "Groupes Contrib":
+        elif __params__["famille"] in ["Groupes Contrib", "Listes des contributeurs"]:
             sql = "SELECT DISTINCT groupeParent FROM tvshowGroupe"
             listeRep = extractMedias(sql=sql, unique=1)
             choix = [(x, {"action":"MenuSerie", "groupe": x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', x) for x in sorted(listeRep)]
@@ -1274,6 +1580,15 @@ def seriesHK():
             listeRep = extractMedias(sql=sql, unique=1)
             choix = [(x, {"action":"MenuSerie", "trakt": x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', x) for x in sorted(listeRep)]
             addCategorieMedia(choix)
+
+        elif __params__["famille"] in ["Derniers Ajouts Series", "Les plus populaires TMDB/trakt", "#Series", "#Best TMDB-TRAKT"]:
+            dictCf ={"Derniers Ajouts Series": "#Series", "Les plus populaires TMDB/trakt": "#Best TMDB-TRAKT", "#Series": "#Series", "#Best TMDB-TRAKT": "#Best TMDB-TRAKT"}
+            sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, m.backdrop, m.runtime, m.id \
+                    FROM tvshow as m WHERE m.numId IN (SELECT f.numId FROM tvshowFamille as f WHERE f.famille='{}')".format(dictCf[__params__["famille"]])\
+                    + orderDefault + " LIMIT {} OFFSET {}".format(limit, offset)
+            movies = extractMedias(sql=sql)
+            __params__["offset"] = offset
+            
         else:
             sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, m.backdrop, m.runtime, m.id \
                     FROM tvshow as m WHERE m.numId IN (SELECT f.numId FROM tvshowFamille as f WHERE f.famille='{}')".format(__params__["famille"])\
@@ -1330,13 +1645,40 @@ def seriesHK():
         movies = extractMedias(sql=sql)
         affMovies(typM, movies)
     #===============================================================================================================================================================================
+    elif "typfamille" in __params__.keys():
+        sql = "SELECT nom FROM tvshowTypeFamille WHERE typFamille='{}'".format(__params__["typfamille"])
+        listeRepData = extractMedias(sql=sql, unique=1)
+        choix = [(x, {"action":"MenuSerie", "famille":x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/%s.png' %x, x) for x in listeRepData]
+        addCategorieMedia(choix)
+    #===============================================================================================================================================================================
+    elif "network" in __params__.keys():
+        if "namenetwork" in __params__.keys():
+            sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, m.backdrop, m.runtime, m.id \
+                    FROM tvshow as m WHERE m.numId IN (SELECT f.numId FROM tvshowNetworkDetail as f WHERE f.network='{}')".format(__params__["namenetwork"])\
+                    + orderDefault + " LIMIT {} OFFSET {}".format(limit, offset)
+            movies = extractMedias(sql=sql)
+            __params__["offset"] = offset
+            #__params__["content"] = "images"
+            affMovies(typM, movies, params=__params__)
+        else:
+            sql = "SELECT network, poster FROM tvshowNetwork"
+            listeRepData = extractMedias(sql=sql)
+            choix = [(x[0], {"action":"MenuSerie", "network":"1", "namenetwork": x[0]}, "http://image.tmdb.org/t/p/w500%s" %x[1], x[0]) for x in listeRepData]
+            addCategorieMedia(choix)
+    #===============================================================================================================================================================================    
     else:
-        sql = "SELECT DISTINCT famille FROM tvshowFamille"
-        listeRep = extractMedias(sql=sql, unique=1)
-        for cat in ["#Documentaires", "Last In", "Last View", "Liste Aléatoire", "Groupes Contrib", "#Years/Last In", "Spécial Widget", "Fav'S HK", "Mes Widgets"]:
+        #sql = "SELECT DISTINCT famille FROM tvshowFamille"
+        #listeRep = extractMedias(sql=sql, unique=1)
+        sql = "SELECT DISTINCT typFamille FROM tvshowTypeFamille"
+        listeRepData = [x for x in extractMedias(sql=sql, unique=1) if x not in ["filtre", "genre", "out"]] 
+        listeRep = []
+        for cat in ["Derniers Ajouts", "Derniers Ajouts Series", "Nouveautés par année", "Les plus populaires TMDB/trakt", "Mon historique", "Mes favoris HK", "Liste Aléatoire", "Listes des contributeurs", "Spécial Widget", "Mes Widgets"]:
             listeRep.append(cat)
         choix = [(x, {"action":"MenuSerie", "famille":x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/%s.png' %x, x) for x in listeRep]
+        choix += [(x, {"action":"MenuSerie", "typfamille":x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/%s.png' %x, x) for x in listeRepData]
+        choix += [("Diffuseurs", {"action":"MenuSerie", "network":"1"}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', "Diffuseur")]
         choix.append(("Filtres", {"action":"filtres", "typM": "tvshow"}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/Filtres.png', "Filtres"))
+        choix.append(("Genres", {"action":"genres", "typM": "tvshow"}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', "Genres"))
         addCategorieMedia(choix)
 
 def getImageWidget(x):
@@ -1361,24 +1703,39 @@ def getImageWidget(x):
     return im
 
 def addCategorieMedia(choix):
-    dictChoix = {"Last In": "Liste des derniers entrés dans pastebin (nouveautée ou pas)", "Last View": "La liste de médias commencés ou la reprise est possible", "Liste Aléatoire": "Liste de médias sortis au hazard, quand tu ne sais pas quoi regarder",\
-         "Search": "ben recherche ..... (astuce le _ remplace n'importe quel caractére ex search => r_m donnera tous les titres qui contiennent ram, rom , rum etc... Interressant pour la recherche simultanées de 'e é è ê'",\
-          "Groupes Contrib": "Les groupes classés des conributeurs",\
+    dictChoix = {"Derniers Ajouts": "Liste des derniers, tous types, entrés dans pastebin (nouveauté ou pas, et update)", "Derniers Ajouts Films": "Liste ,uniquement ,films des derniers entrés dans pastebin (nouveauté ou pas, et update)",\
+     "Mon historique": "La liste de médias commencés ou la reprise est possible", "Liste Aléatoire": "Liste de médias sortis au hazard, quand tu ne sais pas quoi regarder",\
+         "Recherche": "ben recherche ..... (astuce le _ remplace n'importe quel caractére ex search => r_m donnera tous les titres qui contiennent ram, rom , rum etc... Interressant pour la recherche simultanées de 'e é è ê'",\
+          "Groupes Contrib": "Les groupes classés des conributeurs", "Les plus populaires TMDB/trakt": "Les mieux notés ou populaires chez movieDB et trakt",\
           "Année(s)": "Recherche par années ex 2010 ou groupe d'années 2010:2013 => tous les medias 2010 2011 2012 2013", "Genre(s)": "vos genres préféres avec le multi choix ex choix sience-fiction et fantatisque => la liste gardera les 2 genres", \
           "Alpha(s)": "liste suivant dont le titre commence pas la lettre choisie ou le debut du mot ex ram donnera tous les titres commencant par ram (astuce le _ remplace n'importe quel caractére",
           "Filtres": "les filtres search, Alphanumérique, genres, Années etc.... Cela est fait sur ensemble des médias",
-          "#Years/Last In": "Classement medias par ordre d'année ensuite par date entrée dans pastebin (Documentaires, concerts, spectacles, animations exclues)",
-          "#Notations": "Classement notation descroissant > 7 et < 9", "Fav'S HK": "liste de vos favoris"}
-    xbmcplugin.setPluginCategory(__handle__, "Choix Categorie")
+          "Nouveautés par année": "Classement medias par ordre d'année ensuite par date entrée dans pastebin (Documentaires, concerts, spectacles, animations exclues)",
+          "Les mieux notés": "Classement notation descroissant > 7 et < 9", "Mes favoris HK": "liste de vos favoris"}
+    
+    content = ""
+    try:
+        if "network" in choix[0][1].keys():
+            nomF = "Diffuseurs"
+            #content = "files"
+        else:
+            nomF = "Choix Gatégories"
+    except:
+        nomF =  "Choix Gatégories"
+    
+    xbmcplugin.setPluginCategory(__handle__, nomF)
+    if content:
+        xbmcplugin.setContent(__handle__, content)
     addon = xbmcaddon.Addon("plugin.video.sendtokodiU2P")
     isFolder = True
-    for ch in sorted(choix):
+    
+    for ch in choix:
         name, parameters, picture, texte = ch
         if texte in dictChoix.keys():
             texte = dictChoix[texte]
         li = xbmcgui.ListItem(label=name)
         li.setInfo('video', {"title": name, 'plot': texte, 'mediatype': 'video'})
-        if not os.path.isfile(xbmcvfs.translatePath(picture)):
+        if "http" not in picture and not os.path.isfile(xbmcvfs.translatePath(picture)):
             picture = 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/liste.png'
         li.setArt({'thumb': picture,
                   #'icon':  addon.getAddonInfo('icon'),
@@ -1390,16 +1747,20 @@ def addCategorieMedia(choix):
 
 def filtres(params):
     typM = params["typM"]
-    dictChoix = {"Last In": "Liste des derniers entrés dans pastebin (nouveautée ou pas)", "Last View": "La liste de médias commencés ou la reprise est possible", "Liste Aléatoire": "Liste de médias sortis au hazard, quand tu ne sais pas quoi regarder",\
+    dictChoix = {"Derniers Ajours": "Liste des derniers entrés dans pastebin (nouveautée ou pas)", "Last View": "La liste de médias commencés ou la reprise est possible", "Liste Aléatoire": "Liste de médias sortis au hazard, quand tu ne sais pas quoi regarder",\
          "Search": "ben recherche ..... (astuce le _ remplace n'importe quel caractére ex search => r_m donnera tous les titres qui contiennent ram, rom , rum etc... Interressant pour la recherche simultanées de 'e é è ê'",\
           "Groupes Contrib": "Les groupes classés des conributeurs",\
           "Année(s)": "Recherche par années ex 2010 ou groupe d'années 2010:2013 => tous les medias 2010 2011 2012 2013", "Genre(s)": "vos genres préféres avec le multi choix ex choix sience-fiction et fantatisque => la liste gardera les 2 genres", \
           "Alpha(s)": "liste suivant dont le titre commence pas la lettre choisie ou le debut du mot ex ram donnera tous les titres commencant par ram (astuce le _ remplace n'importe quel caractére"}
-    filtres = ["Année(s)" , "Search", "Genre(s)", "Alpha(s)", "Multi-Tri"]
+    filtres = ["Année(s)" , "Recherche", "Genre(s)", "Alpha(s)", "Multi-Tri"]
     xbmcplugin.setPluginCategory(__handle__, "Choix Filtres")
     addon = xbmcaddon.Addon("plugin.video.sendtokodiU2P")
     isFolder = True
     if typM == "movie":
+        sql = "SELECT nom FROM movieTypeFamille WHERE typFamille='filtre'"
+        liste = extractMedias(sql=sql)
+        liste = sorted([x[0] for x in liste])
+        filtres += liste
         choix = [(x, {"action":"MenuFilm", "famille":x, "offset": 0, "limit": int(getNbMedias())}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', x) for x in filtres]
     else:
         choix = [(x, {"action":"MenuSerie", "famille":x, "offset": 0, "limit": int(getNbMedias())}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', x) for x in filtres]
@@ -1407,6 +1768,38 @@ def filtres(params):
         name, parameters, picture, texte = ch
         if texte in dictChoix.keys():
             texte = dictChoix[texte]
+        li = xbmcgui.ListItem(label=name)
+        li.setInfo('video', {"title": name, 'plot': texte, 'mediatype': 'video'})
+        li.setArt({'thumb': picture,
+                  'icon': addon.getAddonInfo('icon'),
+                  'fanart': addon.getAddonInfo('fanart')})
+        url = sys.argv[0] + '?' + urlencode(parameters)
+
+        xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=li, isFolder=isFolder)
+    xbmcplugin.endOfDirectory(handle=__handle__, succeeded=True)
+
+def genres(params):
+    typM = params["typM"]
+    xbmcplugin.setPluginCategory(__handle__, "Choix Genres")
+    addon = xbmcaddon.Addon("plugin.video.sendtokodiU2P")
+    isFolder = True
+    if typM == "movie":
+        mdb = TMDB(__keyTMDB__)
+        tabGenre = mdb.getGenre()
+        sql = "SELECT nom FROM movieTypeFamille WHERE typFamille='genre'"
+        liste = extractMedias(sql=sql)
+        tabGenre += sorted([x[0] for x in liste])
+        choix = [(x, {"action":"MenuFilm", "famille": "genres", "typgenre": x, "offset": 0, "limit": int(getNbMedias())}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', x) for x in tabGenre]
+    else:
+        mdb = TMDB(__keyTMDB__)
+        tabGenre = mdb.getGenre(typM="tv")
+        sql = "SELECT nom FROM tvshowTypeFamille WHERE typFamille='genre'"
+        liste = extractMedias(sql=sql)
+        tabGenre += sorted([x[0] for x in liste])
+        choix = [(x, {"action":"MenuSerie", "famille": "genres", "typgenre": x, "offset": 0, "limit": int(getNbMedias())}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', x) for x in tabGenre]
+
+    for ch in sorted(choix):
+        name, parameters, picture, texte = ch
         li = xbmcgui.ListItem(label=name)
         li.setInfo('video', {"title": name, 'plot': texte, 'mediatype': 'video'})
         li.setArt({'thumb': picture,
@@ -1442,10 +1835,9 @@ def affCast2(params):
     if typM == "":
         typM = params["typM"]
     xbmcplugin.setPluginCategory(__handle__, "Acteurs / Réalisateur")
-    xbmcplugin.setContent(__handle__, 'movies')
+    xbmcplugin.setContent(__handle__, 'files')
     mdb = TMDB(__keyTMDB__)
     liste = mdb.castFilm(numId)
-    notice(liste)
     for l in liste:
         media = Media("cast", *l)
         media.typeMedia = typM
@@ -1507,8 +1899,30 @@ def addDirectoryEbook(name, isFolder=True, parameters={}, media="" ):
     url = sys.argv[0] + '?' + urlencode(parameters)
     return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=li, isFolder=isFolder)
 
+def logos(typM):
+    if typM == "movie":
+        #clearlogo  clearart fanart  
+        sql = "SELECT numId, logo, clearart FROM movieFanart"
+        logos = extractMedias(sql=sql)
+        dictLogos = {x[0]: x[1] for x in logos if x[1]}
+        dictArt = {x[0]: x[2] for x in logos if x[2]}
+        #clearlogo tmdb
+        sql = "SELECT numId, logo FROM movieTMDBlogo"
+        logos = extractMedias(sql=sql)
+        dictLogosTMDB = {x[0]: x[1] for x in logos}
+    else:
+        sql = "SELECT numId, logo, clearart FROM tvshowFanart"
+        logos = extractMedias(sql=sql)
+        dictLogos = {x[0]: x[1] for x in logos if x[1]}
+        dictArt = {x[0]: x[2] for x in logos if x[2]}
+        #clearlogo tmdb
+        sql = "SELECT numId, logo FROM tvshowTMDBlogo"
+        logos = extractMedias(sql=sql)
+        dictLogosTMDB = {x[0]: x[1] for x in logos}
+    return dictLogos, dictArt, dictLogosTMDB
 
 def affMovies(typM, medias, params=""):
+
     if params and "favs" in params.keys():
         nom = widget.getProfil(params["favs"])
         xbmcplugin.setPluginCategory(__handle__, "Favs: %s" %nom)
@@ -1517,26 +1931,51 @@ def affMovies(typM, medias, params=""):
     try:
         if medias[0][4] == "divers":
             xbmcplugin.setContent(__handle__, 'files')
-        else:
+        elif typM == "movie":
             xbmcplugin.setContent(__handle__, 'movies')
+        else:
+            xbmcplugin.setContent(__handle__, 'tvshows')
     except:
         xbmcplugin.setContent(__handle__, 'movies')
+    dictLogos, dictArt, dictLogosTMDB = logos(typM)
     i = 0
     for i, media in enumerate(medias):
         media = Media(typM, *media[:-1])
         if typM == "saga":
             addDirectoryFilms(media.title, isFolder=True, parameters={"action":"MenuFilm", "famille": "sagaListe", "numIdSaga": media.numId}, media=media)
         else:
+
             if media.numId == "divers":
                 media.numId = 0
                 addDirectoryFilms("%s (%s)" %(media.title, media.year), isFolder=False, parameters={"action": "playHK", "lien": media.link, "u2p": media.numId}, media=media)
             else:
                 if typM == "movie":
+                    urlFanart = "http://assets.fanart.tv/fanart/movie/"
+                else:
+                    urlFanart = "http://assets.fanart.tv/fanart/tv/"
+                if int(media.numId) in dictLogos.keys():
+                        media.clearlogo = urlFanart + dictLogos[int(media.numId)]
+                else:
+                    if int(media.numId) in dictLogosTMDB.keys():
+                        media.clearlogo = "http://image.tmdb.org/t/p/w300"  + dictLogosTMDB[int(media.numId)]
+                    else:
+                        media.clearlogo = ""
+                if int(media.numId) in dictArt.keys():
+                    media.clearart = urlFanart + dictArt[int(media.numId)]
+                else:
+                    media.clearart = ""
+                if typM == "movie":
                     ok = addDirectoryFilms("%s" %(media.title), isFolder=True, parameters={"action": "detailM", "lien": media.link, "u2p": media.numId}, media=media)
+                    '''
+                    if __addon__.getSetting("newfen") == "false":
+                        ok = addDirectoryFilms("%s" %(media.title), isFolder=True, parameters={"action": "detailM", "lien": media.link, "u2p": media.numId}, media=media)
+                    else:
+                        ok = addDirectoryFilms("%s" %(media.title), isFolder=True, parameters={"action": "visuFenmovie", "lien": media.link, "u2p": media.numId, 'title': media.title}, media=media)
+                    '''
                 elif typM == "audiobook":
                     ok = addDirectoryFilms(media.title, isFolder=True, parameters={"action": "play", "lien": media.link, "u2p": media.numId}, media=media)
                 else:
-                    ok = addDirectoryFilms("%s (%s)" %(media.title, media.year), isFolder=True, parameters={"action": "detailT", "lien": media.link, "u2p": media.numId}, media=media)
+                    ok = addDirectoryFilms("%s" %(media.title), isFolder=True, parameters={"action": "detailT", "lien": media.link, "u2p": media.numId}, media=media)
     xbmcplugin.addSortMethod(__handle__, xbmcplugin.SORT_METHOD_UNSORTED)
     xbmcplugin.addSortMethod(__handle__, xbmcplugin.SORT_METHOD_VIDEO_YEAR)
     xbmcplugin.addSortMethod(__handle__, xbmcplugin.SORT_METHOD_TITLE)
@@ -1545,7 +1984,7 @@ def affMovies(typM, medias, params=""):
     if i == (int(getNbMedias()) -1):
         addDirNext(params)
 
-    xbmcplugin.endOfDirectory(handle=__handle__, succeeded=True)
+    xbmcplugin.endOfDirectory(handle=__handle__, succeeded=True, cacheToDisc=True)
 
 
 def addDirectoryFilms(name, isFolder=True, parameters={}, media="" ):
@@ -1563,30 +2002,63 @@ def addDirectoryFilms(name, isFolder=True, parameters={}, media="" ):
             'poster': media.poster,
             #'icon': addon.getAddonInfo('icon'),
              'fanart': media.backdrop})
+    if media.clearlogo :
+        li.setArt({'clearlogo': media.clearlogo})
+    if media.clearart :
+        li.setArt({'clearart': media.clearart})
     commands = []
     #commands.append(("Ajout Fav'S HK", 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=fav&mode=ajout&u2p=%s&typM=movies)' %media.numId, ))
-    commands.append(('Bande Annonce', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=ba&u2p=%s&typM=%s)' %(media.numId, media.typeMedia)))
+    commands.append(('[COLOR yellow]Bande Annonce[/COLOR]', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=ba&u2p=%s&typM=%s)' %(media.numId, media.typeMedia)))
     if media.typeMedia == "movie":
-        commands.append(('Search', 'ActivateWindow(10025,plugin://plugin.video.sendtokodiU2P/?action=MenuFilm&famille=Search,return)'))
+        commands.append(('[COLOR yellow]Recherche[/COLOR]', 'ActivateWindow(10025,plugin://plugin.video.sendtokodiU2P/?action=MenuFilm&famille=Search,return)'))
         sch = 'ActivateWindow(10025,plugin://plugin.video.sendtokodiU2P/?action=MenuFilm&famille=Search,return)'
     else:
-        commands.append(('Search', 'ActivateWindow(10025,plugin://plugin.video.sendtokodiU2P/?action=MenuSerie&famille=Search,return)'))
+        commands.append(('[COLOR yellow]Recherche[/COLOR]', 'ActivateWindow(10025,plugin://plugin.video.sendtokodiU2P/?action=MenuSerie&famille=Search,return)'))
         sch = 'ActivateWindow(10025,plugin://plugin.video.sendtokodiU2P/?action=MenuSerie&famille=Search,return)'
-    commands.append(('Choix Profil', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=actifPm)'))
-    commands.append(('Reload Skin', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=rlk)'))
+    commands.append(('[COLOR yellow]Choix Profil[/COLOR]', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=actifPm)'))
+    commands.append(('[COLOR yellow]Reload Skin[/COLOR]', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=rlk)'))
+    #commands.append(("[COLOR yellow]Refresh[/COLOR]", "Container.Refresh"))
     li.addContextMenuItems(commands)
     isWidget = xbmc.getInfoLabel('Container.PluginName')
     if "U2P" not in isWidget:
-        li.setProperty('widget', 'true')    
+        li.setProperty('widget', 'true')
+        if media.typeMedia == "movie":
+            li.setProperty('widgetmovie', 'true')
+            li.setProperty('lire', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=visuFenmovie&u2p=%s&title=%s&lien=%s)' %(media.numId, media.title, media.link))    
+            #li.setProperty('lire', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=playHK&u2p=%s&typM=%s&lien=%s)' %(media.numId, media.typeMedia, media.link))
         li.setProperty('ba', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=ba&u2p=%s&typM=%s)' %(media.numId, media.typeMedia))
         li.setProperty('search', sch)  
         li.setProperty('profil', 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=actifPm)')
         li.setProperty("reloadSkin", 'RunPlugin(plugin://plugin.video.sendtokodiU2P/?action=rlk)')
+        #li.setProperty("Refresh", "Container.Refresh")
     li.setProperty('IsPlayable', 'true')    
     url = sys.argv[0] + '?' + urlencode(parameters)
     return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=li, isFolder=isFolder)
 
+def fenMovie(params):
+    #xbmcplugin.setPluginCategory(__handle__, "Choix Pbi2kodi")
+    #xbmcplugin.setContent(__handle__, 'files')
+    title = params["title"]
+    u2p = params["u2p"]
+    try: 
+        links = params["lien"]
+    except :
+        links = "" 
+        
+    #dialog = xbmcgui.Dialog()
+    #ret = dialog.contextmenu(['Détails Informations HK', 'Lire', "Ajouter Fav's HK", "Retirer LastView"])
+    #notice(ret)
+    #if ret == 0:
+    window = FenFilmDetail(title=title, numId=u2p, links=links)
+    # Show the created window.
+    window.doModal()
+    del window
+    #elif ret == 1:
+    #    affLiens2({"u2p": u2p, "lien": links})
+    
+    #xbmcplugin.endOfDirectory(handle=__handle__, succeeded=True, cacheToDisc=False) 
 
+    
 def menuPbi():
     xbmcplugin.setPluginCategory(__handle__, "Choix Pbi2kodi")
     xbmcplugin.setContent(__handle__, 'files')
@@ -1875,9 +2347,32 @@ def playEpisode(params):
     param = {"u2p": params["u2p"], 'action': "playHK", 'lien': params["lien"], 'episode': params["episode"], "saison": params["saison"], "typMedia": "episode"}
     playMediaHK(param)
     
+def mepInfos(numId):
+    sql = "SELECT m.title, m.overview, m.year, m.poster, m.numId, m.genre, m.popu, (SELECT l.link FROM movieLink as l WHERE l.numId=m.numId) , m.backdrop, m.runtime, m.id \
+                        FROM movie as m WHERE m.numId={}".format(numId)
+    movies = extractMedias(sql=sql)
+    media = Media("movie", *movies[0])
+
+    logo, clearart, banner = extractFanart(numId)
+    urlFanart = "http://assets.fanart.tv/fanart/movie/"
+
+    li = xbmcgui.ListItem(label=media.title)
+    li.setUniqueIDs({ 'tmdb' : media.numId }, "tmdb")
+    li.setInfo('video', {"title": media.title, 'plot': media.overview, 'genre': media.genre, "dbid": media.numId + 500000,
+            "year": media.year, 'mediatype': media.typeMedia, "rating": media.popu, "duration": media.duration * 60 })
+    
+    #liz.setPath("plugin://%s/play/%s" % (ADDON.getAddonInfo("id"),urllib.quote(url, safe='')) )
+    
+    li.setArt({'icon': media.backdrop,
+            'thumb': media.poster,
+            'poster': media.poster,
+            'clearlogo': urlFanart,
+            'fanart': media.backdrop})
+    return li
 
 def playMediaHK(params):
     notice(params)
+    
     typMedia = xbmc.getInfoLabel('ListItem.DBTYPE')
     if not typMedia:
         xbmc.executebuiltin("Dialog.Close(busydialog)")
@@ -1921,8 +2416,12 @@ def playMediaHK(params):
         showInfoNotification("playing title " + result['title'])
         try:
             listIt = createListItemFromVideo(result)
-            xbmcplugin.setResolvedUrl(__handle__, True, listitem=listIt)
-            #xbmc.Player().play(url, listIt)
+            if "skin" in params.keys():
+                li = mepInfos(params["u2p"])
+                xbmc.Player().play(url, li)
+            else:
+                xbmcplugin.setResolvedUrl(__handle__, True, listitem=listIt)
+            
         except Exception as e:
             notice("erreur Play " + str(e))
         threading.Thread(target=gestionThumbnails).start()
@@ -2029,12 +2528,12 @@ def playMedia(params):
             idfile = xbmc.getInfoLabel('ListItem.DBID')
     else:
         idfile = xbmc.getInfoLabel('ListItem.DBID')
-    notice("idFile " + str(idfile))
-    notice(xbmc.getInfoLabel('ListItem.Episode'))
-    notice(xbmc.getInfoLabel('ListItem.TvShowDBID'))
-    notice(xbmc.getInfoLabel('ListItem.PercentPlayed')) 
-    notice(xbmc.getInfoLabel('ListItem.EndTimeResume')) 
-    notice("fin listem")
+    #notice("idFile " + str(idfile))
+    #notice(xbmc.getInfoLabel('ListItem.Episode'))
+    #notice(xbmc.getInfoLabel('ListItem.TvShowDBID'))
+    #notice(xbmc.getInfoLabel('ListItem.PercentPlayed')) 
+    #notice(xbmc.getInfoLabel('ListItem.EndTimeResume')) 
+    #notice("fin listem")
     
     result = getParams(params['lien'])
     if result and "url" in result.keys():
@@ -2311,7 +2810,8 @@ def mepAutoStart():
             os.mkdir(repStart)
         except: pass
         for f in os.listdir(repFileStart):
-             xbmcvfs.copy(xbmcvfs.translatePath("special://home/addons/plugin.video.sendtokodiU2P/resources/maj/%s" %f), xbmcvfs.translatePath("special://home/addons/service.autoexec/%s" %f))
+            if not os.path.isfile(xbmcvfs.translatePath("special://home/addons/service.autoexec/%s" %f)):
+                xbmcvfs.copy(xbmcvfs.translatePath("special://home/addons/plugin.video.sendtokodiU2P/resources/maj/%s" %f), xbmcvfs.translatePath("special://home/addons/service.autoexec/%s" %f))
         open(xbmcvfs.translatePath("special://home/addons/plugin.video.sendtokodiU2P/maj.txt"), "w")
 
 def patchNextUp():
@@ -2349,6 +2849,14 @@ def createFav():
             #txDeb = "<favourites>"
             #txFin = "\n</favourites>"
 
+def testHKdb():
+    cnx = sqlite3.connect(xbmcvfs.translatePath("special://home/addons/plugin.video.sendtokodiU2P/medias.bd"))
+    cur = cnx.cursor()
+    cur.execute("PRAGMA integrity_check")
+    result = cur.fetchone()[0]
+    cur.close()
+    cnx.close()
+    return result
 
 def importDatabase(typImport="full", debug=1, maj=0):
     repAddon = xbmcvfs.translatePath("special://home/addons/plugin.video.sendtokodiU2P/")
@@ -2454,9 +2962,26 @@ def importDatabase(typImport="full", debug=1, maj=0):
                                 zipObject.extract(f, repAddon)
                 except:
                     try:
-                        zipObject.extract("medias.bd", xbmcvfs.translatePath('special://home/addons/plugin.video.sendtokodiU2P/resources/'))
-                        time.sleep(0.2)
-                        shutil.move(xbmcvfs.translatePath("special://home/addons/plugin.video.sendtokodiU2P/resources/medias.bd"), xbmcvfs.translatePath("special://home/addons/plugin.video.sendtokodiU2P/medias.bd"))
+                        # extract db HK
+                        bdOk = False
+                        for nbImport in range(3):
+                            zipObject.extract("medias.bd", xbmcvfs.translatePath('special://home/addons/plugin.video.sendtokodiU2P/resources/'))
+                            time.sleep(0.2)
+                            shutil.move(xbmcvfs.translatePath("special://home/addons/plugin.video.sendtokodiU2P/resources/medias.bd"), xbmcvfs.translatePath("special://home/addons/plugin.video.sendtokodiU2P/medias.bd"))
+                            time.sleep(0.1)
+                            if debug:
+                                bdOk = True
+                                break
+                            else:
+                                if testHKdb() == "ok":
+                                    #notice("nombre import: " + str(nbImport + 1))
+                                    bdOk = True
+                                    break
+                            time.sleep(2)
+                        if not bdOk:
+                            showInfoNotification('Erreur database corrupt, faite un "Import manuel"')
+                        
+
                     except: pass
                     for i, f in enumerate(listOfFileNames):
                         nbGroupe = int((i / float(nbFiles)) * 100.0)
@@ -2534,6 +3059,8 @@ def actifProfil(params, menu=1):
 def gestionVuSaison(params):
     sql = "SELECT DISTINCT episode FROM tvshowEpisodes WHERE numId={} and saison='Saison {}'".format(params["u2p"], params["saison"].zfill(2))
     liste = extractMedias(sql=sql, unique=1)
+    liste = [(x, int(x.split("E")[1])) for x in liste]
+    liste = [x[0] for x in sorted(liste, key=lambda y: y[1])]
     dialog = xbmcgui.Dialog()
     choix = ["Aucun", "Tous", "Tous sauf"] + liste
     selected = dialog.multiselect("Mettre en Vus", choix, preselect=[])
@@ -2577,6 +3104,7 @@ def gestionVuSaison(params):
         if params["refresh"] == "1":
             xbmc.executebuiltin("Container.Refresh")
 
+
     
 def createWidg():
     cnx = sqlite3.connect(xbmcvfs.translatePath('special://home/userdata/addon_data/plugin.video.sendtokodiU2P/bookmark.db'))
@@ -2589,6 +3117,7 @@ def createWidg():
       UNIQUE (title))
         """)
     cnx.commit()
+
     dialogTuto = xbmcgui.Dialog()
     dialogTuto.textviewer('Tuto', '''1ere fenêtre
 tu choisis une liste soit "SERIES ", soit "FILMs" 
@@ -2599,7 +3128,7 @@ filtré => c'est sans les documentaires , les concerts, les spectacles et les an
 
 3eme fenêtre
 FILTRES
-cela sert à filtrer la bibliothéque en fonction de critéres 
+cela sert a filtrer la bibliothéque en fonction de critéres 
 1) Genre(s)
 ca te permet de choisir ta liste en fonction du genre 
 Par exemple tu veux les films horreur, tu selectionnes dans la liste "Horreur"
@@ -2608,7 +3137,7 @@ Tu valides par "OK
 
 2) Année(s)
 tu choisis ta liste avec le critére de la date du médias
-Exemple tu veux tous les médias de 2021
+Exemple tu veux tous les média de 2021
 tu inscris simplement: 2021
 si tu veux une liste par plage d'années
 Exemple tu veux les medias des années de 2010 à 2019 (une decade)
@@ -2617,30 +3146,30 @@ et tu valides par "OK"
 
 3) Popularité
 c'est un critére de notation, il s'emploie, pour un maximum d'efficacité, avec le critére "Votes" que l'on verra aprés
-tu veux tous les medias avec une la note est inférieur à 9
+tu veux tous les medias donc la note est inférieur à 9
 tu inscris: <9
 tu veux par plage de notation
-Exemple tu veux les medias qui ont une note supérieur a 4 et inférieur a 9.5 
+Exemple tu veux les medias qui ont une note supérieur à 4 et inférieur à 9.5 
 tu inscris: 4:9.5
 On met un . a la place de la ,
 
 4) Votes
-c'est le nombre de votants pour obtenir la note "Popularité" vue juste avant
+c'est le nombre de votant pour obtenir la note "Popularité" vu juste avant
 c'est un tandem avec "Popularité"
 on va prendre un exemple
-Un média peu connu qui recoit 2 votes , 1 a 9.5 et 1 a 10 (c'est plus frequent qu on ne le pense)
+Un média peut connu qui recoit 2 votes , 1 à 9.5 et 1 à 10 (c'est plus frequent qu on ne le pense)
 Il aura une note de 9.75 qui sera tres tres surfaite....
 Pour eviter ce probléme , on indique un nombre de votants minimum
-si on a mis en "Popularité" 4:9.5, on ajoute un nombre de votants minimum example de 500, et là on filtre bien les médias peu regardés donc peu notés
+si on a mis en "Popularité" 4:9.5, on ajoute un nombre de votant minimum example de 500, et la on filtre bien les médias peu regardés donc peu notés
 2 exemples 
     #je veux les films notés entre 3 et 9.5 mais aussi les anciens films (tmdb n'existait pas, donc pas forcément été beaucoup noté)
         Popularité => 3:9.5
         Votes => 200
-        200 me permet de filtrer les nanards.... 
+        200 me permet de filtrer les nanard.... 
     #je veux les gros blockbusters, bien notés
         Popularité => 6:9.5
         Votes => 10000
-        là tu as les tops....
+        la tu as les top....
 
 5) Langue
 tu choisis ta liste en fonction de la langue d'origine
@@ -2662,7 +3191,7 @@ Year = Par ordre d'année du média du plus récent au plus vieux
 on peut mettre plusieurs tris, la priorité et l'ordre insertion des tris
 en 1 tu choisis year
 en 2 popularity
-L'ordre d'affichage se fera => tous les medias de 2022 classé par note descendante ensuite 2021 classé par note etc ...
+ordre se fera => tous les medias de 2022 classé par ordre de note ensuite 2021 classé par ordre de note etc ...
 
 
 5éme fenêtre
@@ -2688,7 +3217,7 @@ ps: si ya des fautes, ca tombe bien ce n'est pas un concours d'orthographe...'''
     
     dictFiltre = {}
     tabOrder = []
-    dictOrder = {"Alpha": "Title", "Date Added": "id", "Popularity": "popu", "Year": "dateRelease"}
+    dictOrder = {"Alpha": "Title ASC", "Date Added": "id DESC", "Popularity": "popu DESC", "Year": "year DESC", "Date Release": "dateRelease DESC", "Votes": "votes DESC"}
     
     dialog = xbmcgui.Dialog()
     tc = dialog.yesno('Contenu', tx1)
@@ -2729,22 +3258,22 @@ ps: si ya des fautes, ca tombe bien ce n'est pas un concours d'orthographe...'''
                     ajoutGenre = 0
                     choix = list(dictOrder.keys())
                     dialog = xbmcgui.Dialog()
-                    selected = dialog.select("Choix ordre de trie (par defaut desc sauf Alpha)", choix)
+                    selected = dialog.select("Choix ordre de tri (par defaut desc sauf Alpha)", choix)
                     if selected != -1:
                         if choix[selected] not in tabOrder:
                             tabOrder.append(choix[selected])
                         dialog = xbmcgui.Dialog()
                         ajout = dialog.yesno('Filtres', 'Ajout ordre supplémentaire ?')
                         if not ajout:
-                            if tabOrder[0] == "Alpha":
-                                sens = "ASC"
-                            else:
-                                sens = "DESC"
-                            tri = " ORDER BY {} {}".format(",".join([dictOrder[x] for x in tabOrder]), sens)
+                            #if tabOrder[0] == "Alpha":
+                            #    sens = "ASC"
+                            #else:
+                            #    sens = "DESC"
+                            tri = " ORDER BY {}".format(",".join([dictOrder[x] for x in tabOrder]))
                             dialog = xbmcgui.Dialog()
                             d = dialog.numeric(0, 'Nombre Médias')
-                            if int(d) > int(getNbMedias()):
-                                d = getNbMedias()
+                            if int(d) == 0:
+                                d = "40000"
                             elif int(d) < 25:
                                 d = "25"
                             limit = " LIMIT %s" %d
@@ -2821,7 +3350,7 @@ def choixProfil(menu=0):
     else:
         dialog = xbmcgui.Dialog()
         profil = dialog.select("Selectionner le profil à activer", [x[0] for x in liste])
-        if profil:
+        if profil != -1:
             actifProfil({"passwd": liste[profil][1]}, menu=0)
 
 def suppProfil():
@@ -2843,6 +3372,9 @@ def suppProfil():
         sql = "DELETE FROM users WHERE nom=? AND pass=?"
         cur.execute(sql, (liste[selected]))
         cnx.commit()
+        sql = "DELETE FROM certification WHERE pass=?"
+        cur.execute(sql, (liste[selected][1], ))
+        cnx.commit()
     cur.close()
     cnx.close()
 
@@ -2863,55 +3395,82 @@ def ajoutProfil(initP=0):
         d = dialog.input("Mettre ton pass (accés à ton bookmark,\nmettre un pass complexe!!!)", createPass(), type=xbmcgui.INPUT_ALPHANUM)
         if d:
             passwd = d
-            cnx = sqlite3.connect(xbmcvfs.translatePath('special://home/userdata/addon_data/plugin.video.sendtokodiU2P/bookmark.db'))
-            cur = cnx.cursor()
-            cur.execute("""CREATE TABLE IF NOT EXISTS users(
-              `id`    INTEGER PRIMARY KEY,
-              nom TEXT,
-              pass TEXT,
-              UNIQUE (pass))
-                """)
-            cnx.commit()
-            try: 
-                sql = "INSERT INTO users (nom, pass) VALUES (?, ?)"
-                cur.execute(sql, (nom, passwd, ))
-                cnx.commit()
-
-                params = {
-                    'action': 'actifP',
-                    'passwd': passwd
-                }
-                            
-                cmd = {
-                    'jsonrpc': '2.0',
-                    'method': 'Favourites.AddFavourite',
-                    'params': {
-                        'title': nom,
-                        "thumbnail": xbmcvfs.translatePath("special://home/addons/plugin.video.sendtokodiU2P/resources/png/profil.png"),
-                        "type":"window",
-                        "window":"videos",
-                        "windowparameter": __url__ + '?' + urlencode(params)
-                    },
-                    'id': '1'
-                }
-
-                xbmc.executeJSONRPC(json.dumps(cmd))
-                showInfoNotification("User: %s créé!!" %nom)
-            except:
-                showInfoNotification("ECHEC création User, changez Pass !!")
-            cur.close()
-            cnx.close()
-            if initP:
+            dictCertification = {"Familial":1, "10 ans": 12, "12 ans": 14, "16 ans": 17, "18 ans": 25}
+            choix = list(dictCertification.keys())
+            selected = dialog.select("Certification", choix)
+            if selected != -1:
+                certification = dictCertification[choix[selected]]
                 dialog = xbmcgui.Dialog()
-                tc = dialog.yesno('Profil', "Veux-tu activer Bookmark en ligne ? (favoris etc...)")
-                
+                tc = dialog.yesno('Certification', "Autoriser la lecture des titres sans certification ?") 
+                notice("sans: " + str(tc))                   
                 if tc:
-                    __addon__.setSetting(id="bookonline", value="true")
-                    actifProfil({"passwd": passwd}, menu=0)
+                    sans = 1
                 else:
-                    __addon__.setSetting(id="bookonline", value="false")
+                    sans = 0
+                cnx = sqlite3.connect(xbmcvfs.translatePath('special://home/userdata/addon_data/plugin.video.sendtokodiU2P/bookmark.db'))
+                cur = cnx.cursor()
+                cur.execute("""CREATE TABLE IF NOT EXISTS users(
+                  `id`    INTEGER PRIMARY KEY,
+                  nom TEXT,
+                  pass TEXT,
+                  UNIQUE (pass))
+                    """)
+                cnx.commit()
+                cur.execute("""CREATE TABLE IF NOT EXISTS certification(
+                      pass TEXT,
+                      certification INTEGER,
+                      sans INTEGER,
+                      UNIQUE (pass))
+                        """)
+                cnx.commit()
+                try: 
+                    sql = "REPLACE INTO users (nom, pass) VALUES (?, ?)"
+                    cur.execute(sql, (nom, passwd, ))
+                    cnx.commit()
+                    
+                    sql = "REPLACE INTO certification (pass, certification, sans) VALUES (?, ?, ?)"
+                    cur.execute(sql, (passwd, certification, sans))
+                    cnx.commit()
+                    
+
+                    params = {
+                        'action': 'actifP',
+                        'passwd': passwd
+                    }
+                                
+                    cmd = {
+                        'jsonrpc': '2.0',
+                        'method': 'Favourites.AddFavourite',
+                        'params': {
+                            'title': nom,
+                            "thumbnail": xbmcvfs.translatePath("special://home/addons/plugin.video.sendtokodiU2P/resources/png/profil.png"),
+                            "type":"window",
+                            "window":"videos",
+                            "windowparameter": __url__ + '?' + urlencode(params)
+                        },
+                        'id': '1'
+                    }
+
+                    xbmc.executeJSONRPC(json.dumps(cmd))
+                    actifProfil({"passwd": passwd}, menu=0)
+                    showInfoNotification("User: %s créé!!" %nom)
+                except Exception as e:
+                    #showInfoNotification(str(e))
+                    showInfoNotification("ECHEC création User, changez Pass !!")
+                cur.close()
+                cnx.close()
+                if initP:
+                    dialog = xbmcgui.Dialog()
+                    tc = dialog.yesno('Profil', "Veux-tu activer Bookmark en ligne ? (favoris etc...)")
+                    
+                    if tc:
+                        __addon__.setSetting(id="bookonline", value="true")
+                        actifProfil({"passwd": passwd}, menu=0)
+                    else:
+                        __addon__.setSetting(id="bookonline", value="false")
 
 def gestionFavHK(params):
+    
     if params["mode"] == "ajout":
         if __addon__.getSetting("bookonline") != "false":
             widget.pushSite("http://%s/requete.php?name=%s&type=infavs&media=%s&numid=%s" %(__addon__.getSetting("bookonline_site"), __addon__.getSetting("bookonline_name"), params["typM"], params["u2p"]))
@@ -2919,11 +3478,13 @@ def gestionFavHK(params):
             widget.ajoutFavs(params["u2p"], params["typM"])
     else:
         if __addon__.getSetting("bookonline") != "false":
-            notice("http://%s/requete.php?name=%s&type=supfavs&media=%s&numid=%s" %(__addon__.getSetting("bookonline_site"), __addon__.getSetting("bookonline_name"), params["typM"], params["u2p"]))
+            #notice("http://%s/requete.php?name=%s&type=supfavs&media=%s&numid=%s" %(__addon__.getSetting("bookonline_site"), __addon__.getSetting("bookonline_name"), params["typM"], params["u2p"]))
             widget.pushSite("http://%s/requete.php?name=%s&type=supfavs&media=%s&numid=%s" %(__addon__.getSetting("bookonline_site"), __addon__.getSetting("bookonline_name"), params["typM"], params["u2p"]))
         else:
             widget.supFavs(params["u2p"], params["typM"])
-
+    #notice("gestion favs")
+    #xbmc.executebuiltin("Container.Refresh")
+    return
 
 def choixRepo():
     repReposFilm = xbmcvfs.translatePath("special://home/addons/plugin.video.sendtokodiU2P/xml/movie/") 
@@ -2942,6 +3503,7 @@ def choixRepo():
             shutil.copy(repReposFilm + filesRepo[repo], repCatFilm + filesRepo[repo]) 
     xbmc.sleep(500)
     xbmc.executebuiltin('ReloadSkin')
+
 
 def choixliste():
     repListes = xbmcvfs.translatePath("special://home/addons/plugin.video.sendtokodiU2P/xsp/") 
@@ -3053,6 +3615,7 @@ def router(paramstring):
         'MenuFilm': (mediasHK, ""), 'MenuDivers': (diversHK, ""), 'MenuSerie': (seriesHK, ""), 'detailM': (detailsMedia, params), 'detailT': (detailsTV, params),
         "afficheLiens": (affLiens2, params), "suggest": (loadSimReco2, params), "affActeurs": (affCast2, params), "ba": (getBa, params), "visuEpisodes": (affEpisodes2, params),
         "filtres": (filtres, params), 'movies': (ventilationHK, ""), 'supView': (supView, params), 'fav': (gestionFavHK, params), 'vuNonVu': (gestionVuSaison, params),
+        "visuFenmovie": (fenMovie, params), "genres": (genres, params),
         #profils
         'ajoutP': (ajoutProfil, ""), 'choixP': (choixProfil, ""), 'suppP': (suppProfil, ""), 'actifP': (actifProfil, params), 'actifPm': (choixProfil, 1), 
         "assistant": (assistant, ""),

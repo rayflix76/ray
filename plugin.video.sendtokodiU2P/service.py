@@ -1354,12 +1354,17 @@ def mediasHK(params={}):
         else:
             choix = [(x, {"action":"MenuFilm", "groupe": x}, 'special://home/addons/plugin.video.sendtokodiU2P/resources/png/groupe.png', x) for x in sorted(listeRep)]
             addCategorieMedia(choix)
+
     elif "trakt" in __params__.keys():
         sql = "SELECT  groupeFille FROM movieTrakt WHERE groupeParent='{}'".format(__params__["trakt"].replace("'", "''"))
         listeRep = extractMedias(sql=sql, unique=1)
-        if len(listeRep) == 1 or not listeRep:            
+        if len(listeRep) == 1 or not listeRep:  
+            if listeRep:
+                gr = listeRep[0]
+            else: 
+                gr = __params__["trakt"].replace("'", "''")         
             tabMovies = []
-            sql = "SELECT d.numId FROM movieTraktDetail as d WHERE d.groupe='{}' ORDER BY d.id ASC".format(__params__["trakt"].replace("'", "''"))            
+            sql = "SELECT d.numId FROM movieTraktDetail as d WHERE d.groupe='{}' ORDER BY d.id ASC".format(gr)      
             listeNumId = extractMedias(sql=sql, unique=1)
             for n in listeNumId:
                 if n:
@@ -3367,6 +3372,9 @@ def suppProfil():
         sql = "DELETE FROM users WHERE nom=? AND pass=?"
         cur.execute(sql, (liste[selected]))
         cnx.commit()
+        sql = "DELETE FROM certification WHERE pass=?"
+        cur.execute(sql, (liste[selected][1], ))
+        cnx.commit()
     cur.close()
     cnx.close()
 
@@ -3416,11 +3424,11 @@ def ajoutProfil(initP=0):
                         """)
                 cnx.commit()
                 try: 
-                    sql = "INSERT INTO users (nom, pass) VALUES (?, ?)"
+                    sql = "REPLACE INTO users (nom, pass) VALUES (?, ?)"
                     cur.execute(sql, (nom, passwd, ))
                     cnx.commit()
                     
-                    sql = "INSERT INTO certification (pass, certification, sans) VALUES (?, ?, ?)"
+                    sql = "REPLACE INTO certification (pass, certification, sans) VALUES (?, ?, ?)"
                     cur.execute(sql, (passwd, certification, sans))
                     cnx.commit()
                     
@@ -3444,6 +3452,7 @@ def ajoutProfil(initP=0):
                     }
 
                     xbmc.executeJSONRPC(json.dumps(cmd))
+                    actifProfil({"passwd": passwd}, menu=0)
                     showInfoNotification("User: %s créé!!" %nom)
                 except Exception as e:
                     #showInfoNotification(str(e))

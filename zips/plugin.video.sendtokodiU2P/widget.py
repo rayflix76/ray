@@ -57,6 +57,13 @@ def initBookmark():
       UNIQUE (pass))
         """)
     cnx.commit()
+    cur.execute("""CREATE TABLE IF NOT EXISTS certification(
+      pass TEXT,
+      certification INTEGER,
+      sans INTEGER,
+      UNIQUE (pass))
+        """)
+    cnx.commit()
     cur.execute("""CREATE TABLE IF NOT EXISTS favs(
       `id`    INTEGER PRIMARY KEY,
       numId INTEGER,
@@ -77,7 +84,9 @@ def responseSite(url):
     return data
 
 def pushSite(url):
-    resp = requests.get(url)
+    try:
+      resp = requests.get(url)
+    except: pass
     
 def getVu(typM="movie"):
     cnx = sqlite3.connect(xbmcvfs.translatePath('special://home/userdata/addon_data/plugin.video.sendtokodiU2P/bookmark.db'))
@@ -124,8 +133,8 @@ def getProfil(passwd):
         cur.execute(sql, (passwd,))
         nom = cur.fetchone()[0]
     except:
-        #showInfoNotification("Creer un profil .....")
-        nom = "Local"
+        showInfoNotification("Creer in profil .....")
+        nom = "inconnu"
     cur.close()
     cnx.close()
     return nom
@@ -370,10 +379,7 @@ def getListe(title, t="film"):
     cnx.commit()
     sql = "SELECT sql FROM listes WHERE title=? AND type=?" 
     cur.execute(sql, (title, t, ))
-    try:
-        requete  = cur.fetchone()[0]
-    except:
-        requete = ""
+    requete  = cur.fetchone()[0]
     cur.close()
     cnx.close()
     return requete

@@ -9,12 +9,18 @@ try:
 except: pass
 
 
+
+
+
+
 class Media:
     def __init__(self, typeMedia="film", *argvs):
         self.typeMedia = typeMedia
         size = self.getTaille()
         self.poster = "http://image.tmdb.org/t/p/" + size[0]
         self.backdrop = "http://image.tmdb.org/t/p/" + size[1]
+        self.clearlogo = ""
+        self.clearart = ""
 
         if self.typeMedia == "movie":
           #title, overview, year, poster, numId, genre, popu
@@ -33,6 +39,7 @@ class Media:
           self.overview = argvs[1]
           self.numId = argvs[4]
           self.link = argvs[7]
+          
 
         elif self.typeMedia == "menu": 
           #[Title, overview, year, genre, backdrop, popu] 
@@ -98,7 +105,7 @@ class Media:
           #[35339, 'Saison 01', 'S01E01', 'C9PxOAB66@nRlEQs5IiKHK#SD*C9PxOAB66@xClOGtaqotVH#1080P*xMZPoCbT0@8VJMS21ZpReE#*zi6kvPg63@FM63Jev8MtqA#1080P', 'Jack Sylvane', overview", '2012-01-16', '/A97bfgXNHR97WUTn52B4e8zsmn2.jpg', 7.6, 1, 1]
           self.year = argvs[6]
           self.duration = ""
-          self.popu = argvs[-2]
+          self.popu = argvs[8]
           if argvs[7]:
             self.backdrop += argvs[7]
           self.poster += "" 
@@ -273,6 +280,22 @@ class TMDB:
         except:
           dictAff = {}
         return dictAff
+
+    def imageMovie(self, numId):
+        url1 = self.urlBase + "movie/{}/images?api_key={}".format(numId, self.key)
+        req = requests.get(url1)
+        dictImages = req.json()
+        logos = [(logo["iso_639_1"], logo["file_path"]) for logo in dictImages["logos"] if logo["iso_639_1"] in ["fr", "en"]]
+        if logos:
+          logosFr  = [logo for logo in logos if logo[0] == "fr"]
+          if logosFr:
+            return logosFr[0]
+          else:
+            return logos[0]
+        else:
+          return ""
+      
+        
         
 if __name__ == '__main__':
   mdb = TMDB("96139384ce46fd4ffac13e1ad770db7a")
@@ -284,11 +307,15 @@ if __name__ == '__main__':
   #print(mdb.getNumIdBA(1405, "tvshow"))
   #print(mdb.person(16483))
   #print(mdb.person(1245))
-  print(mdb.saison(1405, "01"))
+  #print(mdb.saison(1405, "01"))
+  print(mdb.imageMovie(603))
   #print(mdb.serieNumIdSaison(1405))
-  #https://api.themoviedb.org/3/movie/157336?api_key=96139384ce46fd4ffac13e1ad770db7a&append_to_response=videos,images
+  #https://api.themoviedb.org/3/movie/603?api_key=96139384ce46fd4ffac13e1ad770db7a&append_to_response=images
+  #https://api.themoviedb.org/3/movie/603/images?api_key=96139384ce46fd4ffac13e1ad770db7a&append_to_response=collection
+  #https://api.themoviedb.org/3/movie/603?api_key=96139384ce46fd4ffac13e1ad770db7a&append_to_response=credits
   #https://api.themoviedb.org/3/discover/movie?certification_country=US&certification.lte=G&sort_by=popularity.desc&api_key=96139384ce46fd4ffac13e1ad770db7a&language=fr
   #https://api.themoviedb.org/3/discover/movie?with_companies=2|3&with_genres=16&api_key=96139384ce46fd4ffac13e1ad770db7a&language=fr
+  #http://image.tmdb.org/t/p/w185/yjqRwxcbUlwWlIGO1PEnijkHAV.png
 """"backdrop_sizes": [
   "w300",
   "w780",
@@ -313,6 +340,7 @@ if __name__ == '__main__':
   "w780",
   "original"
 ],
+#http://image.tmdb.org/t/p/w92/
 "profile_sizes": [
   "w45",
   "w185",
