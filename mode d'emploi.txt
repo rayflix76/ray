@@ -1,0 +1,28 @@
+
+mode d'emploi
+
+
+2 - installer les depot et extension
+	retour parametre, extension, installer depuis un zip ca demande d'activer sources inconnue si jamais fait
+	allez sur parametre puis source inconnues et activer le puis retour
+	puis installer depuis un zip mettre oui au message et choisir ray.zip et installer repository.prototype-1.0.zip
+	puis faites la meme chose pour repository.vstream-0.0.5.zip
+		puis faites installer depuis un depot
+	kodi addon repository puis extension video
+	puis descencdre sur catchup TV and more et l'installer
+	retour parametre installer depuis un depot puis vstream et installer
+	retour parametre, extension puis installer depuis un depot
+	ProtoType Repo
+	puis apparence, habillage, projet aura et l'installer
+	quand il vous demande si vous voulez activer le theme metre oui et conserver les modification mettre oui egalement
+	- sur certain appareil il faut installer les dependances avant sinon ca veut pas s'installer
+
+
+Ca actualise kodi patienter 
+il demande d'installer twitch je mets Non
+vous pouvez choisir vos past et votre skin au choix et profiter :)
+
+pour un meilleur rendu 
+- allez dans film puis "Les dossiers" puis entrer dans n'importe quel dossier puis fleche gauche pour faire apparaitre le menu en haut (oun avec la souris) puis clic 3 fois sur le 1er icone "mode de vue liste" afin d'avoir "mode de vue showcase" puis clic sur le cadenas a coté pour verouiller a toute les pages
+- faites la meme procedure pour les series
+
