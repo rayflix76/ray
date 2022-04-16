@@ -45,11 +45,6 @@ addon.setSetting(id="nb_items", value=nb_items)
 thumbnails = "5000"
 addon.setSetting(id="thumbnails", value=thumbnails)
 
-# config vstream
-addon = xbmcaddon.Addon("plugin.video.vstream")
-Upto = "123456789"
-addon.setSetting(id="hoster_uptobox_token", value=Upto)
-
 xbmc.executebuiltin("Notification(EXTRACTION OK,Mise à jour effectuée !)")
 xbmc.sleep(2000)
 xbmc.executebuiltin("Notification(VOUS POUVEZ CHOISIR UN SKIN,Attention les skin full sont plus gourmand !)")
