@@ -47,7 +47,8 @@ addon.setSetting(id="thumbnails", value=thumbnails)
 
 # config vstream
 addon = xbmcaddon.Addon("plugin.video.vstream")
-addon.setSetting(id="hoster_uptobox_token", value=keyUpto)
+Upto = "123456789"
+addon.setSetting(id="hoster_uptobox_token", value=Upto)
 
 xbmc.executebuiltin("Notification(EXTRACTION OK,Mise à jour effectuée !)")
 xbmc.sleep(2000)
