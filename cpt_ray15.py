@@ -45,6 +45,21 @@ addon.setSetting(id="nb_items", value=nb_items)
 thumbnails = "5000"
 addon.setSetting(id="thumbnails", value=thumbnails)
 
+# config vstream
+addon = xbmcaddon.Addon("plugin.video.vstream")
+addon.setSetting(id="hoster_uptobox_token", value=keyUpto)
+
+# config catchup
+addon = xbmcaddon.Addon("plugin.video.catchuptvandmore")
+mail = "rayflix@laposte.net"
+mot2passe = "Mot2passe"
+addon.setSetting(id="nrj.login", value=mail)
+addon.setSetting(id="6play.login", value=mail)
+addon.setSetting(id="rmcbfmplay.login", value=mail)
+addon.setSetting(id="nrj.password", value=mot2passe)
+addon.setSetting(id="6play.password", value=mot2passe)
+addon.setSetting(id="rmcbfmplay.password", value=mot2passe)
+
 xbmc.executebuiltin("Notification(EXTRACTION OK,Mise à jour effectuée !)")
 xbmc.sleep(2000)
 xbmc.executebuiltin("Notification(VOUS POUVEZ CHOISIR UN SKIN,Attention les skin full sont plus gourmand !)")
